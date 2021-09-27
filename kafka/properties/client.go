@@ -9,8 +9,8 @@ func NewClient(loader config.Loader) (*Client, error) {
 }
 
 type Client struct {
-	BootstrapServers []string `default:"localhost:9092"`
-	SecurityProtocol string   `default:"TLS"`
+	BootstrapServers []string `default:"[\"localhost:9092\"]"`
+	SecurityProtocol string   // TLS
 	ClientId         string
 	Tls              *Tls
 	Admin            Admin

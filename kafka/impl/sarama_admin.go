@@ -7,6 +7,7 @@ import (
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/core"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/properties"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/utils"
+	"gitlab.id.vin/vincart/golib/log"
 	"strings"
 	"time"
 )
@@ -15,11 +16,15 @@ type SaramaAdmin struct {
 	props properties.Admin
 }
 
-func NewSaramaAdmin(props properties.Client) core.Admin {
+func NewSaramaAdmin(props *properties.Client) core.Admin {
 	return &SaramaAdmin{props: props.Admin}
 }
 
-func (s SaramaAdmin) CreateTopics(topics map[string]properties.TopicConfiguration) error {
+func (s SaramaAdmin) CreateTopics(topics map[string]core.TopicConfiguration) error {
+	if len(topics) == 0 {
+		log.Infof("Skip create Kafka topics. No topics are defined")
+		return nil
+	}
 	for _, server := range s.props.BootstrapServers {
 		if server == "" {
 			return errors.New("kafka host port is required")
@@ -56,11 +61,17 @@ func (s SaramaAdmin) CreateTopics(topics map[string]properties.TopicConfiguratio
 
 		topicDetails := make(map[string]*sarama.TopicDetail)
 		for topic, configuration := range topics {
+			configEntries := map[string]*string{}
+			if configuration.Retention > 0 {
+				retentionMs := fmt.Sprintf("%d", configuration.Retention.Milliseconds())
+				configEntries["retention.ms"] = &retentionMs
+			}
 			topicDetails[topic] = &sarama.TopicDetail{
 				NumPartitions:     configuration.Partitions,
 				ReplicationFactor: configuration.ReplicaFactor,
-				ConfigEntries:     make(map[string]*string),
+				ConfigEntries:     configEntries,
 			}
+			log.Infof("Init Kafka topic [%s] with config [%+v]", topic, configuration)
 		}
 
 		if _, err := broker.CreateTopics(&sarama.CreateTopicsRequest{
@@ -69,6 +80,7 @@ func (s SaramaAdmin) CreateTopics(topics map[string]properties.TopicConfiguratio
 		}); err != nil {
 			return err
 		}
+		log.Info("All Kafka topics has been created")
 
 		// Close connection to broker
 		if err := broker.Close(); err != nil {

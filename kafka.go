@@ -1,7 +1,9 @@
 package golibmsg
 
 import (
+	"github.com/pkg/errors"
 	"gitlab.id.vin/vincart/golib"
+	"gitlab.id.vin/vincart/golib-message-bus/kafka/core"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/impl"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/listener"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/properties"
@@ -10,16 +12,15 @@ import (
 
 func KafkaPropsOpt() fx.Option {
 	return fx.Options(
-		golib.EnablePropsAutoload(new(properties.Client)),
-		fx.Provide(properties.NewClient),
+		golib.ProvideProps(properties.NewClient),
 	)
 }
 
 func KafkaAdminOpt() fx.Option {
 	return fx.Options(
-		golib.EnablePropsAutoload(new(properties.TopicAdmin)),
-		fx.Provide(properties.NewTopicAdmin),
+		golib.ProvideProps(properties.NewTopicAdmin),
 		fx.Provide(impl.NewSaramaAdmin),
+		fx.Invoke(initiateKafkaAdmin),
 	)
 }
 
@@ -28,4 +29,12 @@ func KafkaProducerOpt() fx.Option {
 		fx.Provide(impl.NewSaramaProducer),
 		fx.Provide(listener.NewProduceMessage),
 	)
+}
+
+func initiateKafkaAdmin(admin core.Admin, props *properties.TopicAdmin) error {
+	err := admin.CreateTopics(props.Topics)
+	if err != nil {
+		return errors.WithMessage(err, "failed create topics")
+	}
+	return nil
 }

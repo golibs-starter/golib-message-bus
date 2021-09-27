@@ -1,8 +1,8 @@
 package properties
 
 import (
+	"gitlab.id.vin/vincart/golib-message-bus/kafka/core"
 	"gitlab.id.vin/vincart/golib/config"
-	"time"
 )
 
 func NewTopicAdmin(loader config.Loader) (*TopicAdmin, error) {
@@ -12,15 +12,9 @@ func NewTopicAdmin(loader config.Loader) (*TopicAdmin, error) {
 }
 
 type TopicAdmin struct {
-	Topics map[string]TopicConfiguration
+	Topics map[string]core.TopicConfiguration
 }
 
 func (h TopicAdmin) Prefix() string {
 	return "vinid.kafka"
-}
-
-type TopicConfiguration struct {
-	Partitions    int32 `default:"1"`
-	ReplicaFactor int16 `default:"1"`
-	Retention     time.Duration
 }
