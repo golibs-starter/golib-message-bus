@@ -20,7 +20,7 @@ func NewSaramaAdmin(props *properties.Client) core.Admin {
 	return &SaramaAdmin{props: props.Admin}
 }
 
-func (s SaramaAdmin) CreateTopics(topics map[string]core.TopicConfiguration) error {
+func (s SaramaAdmin) CreateTopics(topics []core.TopicConfiguration) error {
 	if len(topics) == 0 {
 		log.Infof("Skip create Kafka topics. No topics are defined")
 		return nil
@@ -60,18 +60,18 @@ func (s SaramaAdmin) CreateTopics(topics map[string]core.TopicConfiguration) err
 		}
 
 		topicDetails := make(map[string]*sarama.TopicDetail)
-		for topic, configuration := range topics {
+		for _, configuration := range topics {
 			configEntries := map[string]*string{}
 			if configuration.Retention > 0 {
 				retentionMs := fmt.Sprintf("%d", configuration.Retention.Milliseconds())
 				configEntries["retention.ms"] = &retentionMs
 			}
-			topicDetails[topic] = &sarama.TopicDetail{
+			topicDetails[configuration.Name] = &sarama.TopicDetail{
 				NumPartitions:     configuration.Partitions,
 				ReplicationFactor: configuration.ReplicaFactor,
 				ConfigEntries:     configEntries,
 			}
-			log.Infof("Init Kafka topic [%s] with config [%+v]", topic, configuration)
+			log.Infof("Init Kafka topic [%s] with config [%+v]", configuration.Name, configuration)
 		}
 
 		if _, err := broker.CreateTopics(&sarama.CreateTopicsRequest{

@@ -12,7 +12,7 @@ func NewTopicAdmin(loader config.Loader) (*TopicAdmin, error) {
 }
 
 type TopicAdmin struct {
-	Topics map[string]core.TopicConfiguration
+	Topics []core.TopicConfiguration
 }
 
 func (h TopicAdmin) Prefix() string {
