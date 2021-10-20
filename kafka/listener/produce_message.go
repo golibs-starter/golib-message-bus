@@ -2,19 +2,20 @@ package listener
 
 import (
 	"encoding/json"
+	kafkaConstant "gitlab.id.vin/vincart/golib-message-bus/kafka/constant"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/core"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/properties"
 	"gitlab.id.vin/vincart/golib/config"
 	"gitlab.id.vin/vincart/golib/event"
-	"gitlab.id.vin/vincart/golib/log"
 	"gitlab.id.vin/vincart/golib/pubsub"
 	"gitlab.id.vin/vincart/golib/web/constant"
 	webEvent "gitlab.id.vin/vincart/golib/web/event"
 	webLog "gitlab.id.vin/vincart/golib/web/log"
+	"strings"
 )
 
 type ProduceMessage struct {
-	producer               core.Producer
+	producer               core.AsyncProducer
 	appProps               *config.AppProperties
 	eventProducerProps     *properties.EventProducer
 	eventProps             *event.Properties
@@ -22,11 +23,11 @@ type ProduceMessage struct {
 }
 
 func NewProduceMessage(
-	producer core.Producer,
+	producer core.AsyncProducer,
 	appProps *config.AppProperties,
 	eventProducerProps *properties.EventProducer,
 	eventProps *event.Properties,
-) *ProduceMessage {
+) pubsub.Subscriber {
 	notLogPayloadForEvents := make(map[string]bool)
 	for _, e := range eventProps.Log.NotLogPayloadForEvents {
 		notLogPayloadForEvents[e] = true
@@ -45,85 +46,86 @@ func (p ProduceMessage) Supports(event pubsub.Event) bool {
 }
 
 func (p ProduceMessage) Handle(event pubsub.Event) {
-	logContext := make([]interface{}, 0)
-	webAbstractEvent, isWebEvent := event.(*webEvent.AbstractEvent)
-	if isWebEvent {
-		logContext = []interface{}{constant.ContextReqMeta, p.makeLoggingContext(webAbstractEvent)}
-		webAbstractEvent.ServiceCode = p.appProps.Name
+	lcEvent := strings.ToLower(event.Name())
+	var webAbsEvent *webEvent.AbstractEvent
+	if we, ok := event.(webEvent.AbstractEventWrapper); ok {
+		webAbsEvent = we.GetAbstractEvent()
+		webAbsEvent.ServiceCode = p.appProps.Name
 	}
-	eventTopic, exists := p.eventProducerProps.TopicMappings[event.Name()]
+	eventTopic, exists := p.eventProducerProps.TopicMappings[lcEvent]
 	if !exists {
-		log.Debugw(logContext, "Produce Kafka message is skip, no mapping found for event [%s]", event.Name())
+		webLog.Debuge(event, "Produce Kafka message is skip, no mapping found for event [%s]", event.Name())
 		return
 	}
 	if eventTopic.Disable {
-		log.Debugw(logContext, "Produce Kafka message is disabled for event [%s]", event.Name())
+		webLog.Debuge(event, "Produce Kafka message is disabled for event [%s]", event.Name())
 		return
 	}
 	if eventTopic.TopicName == "" {
-		log.Errorw(logContext, "Cannot find topic for event [%s]", event.Name())
+		webLog.Errore(event, "Cannot find topic for event [%s]", event.Name())
 		return
 	}
 	msgBytes, err := json.Marshal(event)
 	if err != nil {
-		log.Errorw(logContext, "Error when marshalling event [%+v], error [%v]", event, err)
+		webLog.Errore(event, "Error when marshalling event [%+v], error [%v]", event, err)
 		return
 	}
-	headers := make([]core.MessageHeader, 0)
-	if isWebEvent {
-		deviceId, _ := webAbstractEvent.AdditionalData[constant.HeaderDeviceId].(string)
-		deviceSessionId, _ := webAbstractEvent.AdditionalData[constant.HeaderDeviceSessionId].(string)
-		clientIpAddress, _ := webAbstractEvent.AdditionalData[constant.HeaderClientIpAddress].(string)
-		headers = append(headers,
-			core.MessageHeader{
+	message := core.Message{
+		Topic: eventTopic.TopicName,
+		Value: msgBytes,
+		Headers: []core.MessageHeader{
+			{
 				Key:   []byte(constant.HeaderEventId),
-				Value: []byte(webAbstractEvent.Id),
+				Value: []byte(event.Identifier()),
 			},
-			core.MessageHeader{
-				Key:   []byte(constant.HeaderCorrelationId),
-				Value: []byte(webAbstractEvent.RequestId),
-			},
-			core.MessageHeader{
-				Key:   []byte(constant.HeaderDeviceId),
-				Value: []byte(deviceId),
-			},
-			core.MessageHeader{
-				Key:   []byte(constant.HeaderDeviceSessionId),
-				Value: []byte(deviceSessionId),
-			},
-			core.MessageHeader{
-				Key:   []byte(constant.HeaderClientIpAddress),
-				Value: []byte(clientIpAddress),
-			},
-			core.MessageHeader{
+			{
 				Key:   []byte(constant.HeaderServiceClientName),
 				Value: []byte(p.appProps.Name),
 			},
-		)
+		},
+		Metadata: map[string]interface{}{
+			kafkaConstant.EventId:   event.Identifier(),
+			kafkaConstant.EventName: event.Name(),
+		},
 	}
-	message := core.Message{
-		Topic:   eventTopic.TopicName,
-		Value:   msgBytes,
-		Headers: headers,
+	if webAbsEvent != nil {
+		message.Headers = p.makeMessageHeaders(message.Headers, webAbsEvent)
+		message.Metadata = p.makeMessageMetadata(message.Metadata.(map[string]interface{}), webAbsEvent)
 	}
 	p.producer.Send(&message)
-	if p.notLogPayloadForEvents[event.Name()] {
-		log.Infof("Success to produce Kafka message [%s] with id [%s] to topic [%s]",
+	if p.notLogPayloadForEvents[lcEvent] {
+		webLog.Infoe(event, "Success to produce Kafka message [%s] with id [%s] to topic [%s]",
 			event.Name(), event.Identifier(), message.Topic)
-	} else {
-		log.Infof("Success to produce Kafka message [%s] with id [%s] to topic [%s], value [%s]",
-			event.Name(), event.Identifier(), message.Topic, string(msgBytes))
+		return
 	}
+	webLog.Infoe(event, "Success to produce Kafka message [%s] with id [%s] to topic [%s], value [%s]",
+		event.Name(), event.Identifier(), message.Topic, string(msgBytes))
 }
 
-func (p ProduceMessage) makeLoggingContext(event *webEvent.AbstractEvent) webLog.LoggingContext {
+func (p ProduceMessage) makeMessageHeaders(headers []core.MessageHeader, event *webEvent.AbstractEvent) []core.MessageHeader {
 	deviceId, _ := event.AdditionalData[constant.HeaderDeviceId].(string)
 	deviceSessionId, _ := event.AdditionalData[constant.HeaderDeviceSessionId].(string)
-	return webLog.LoggingContext{
-		UserId:            event.UserId,
-		DeviceId:          deviceId,
-		DeviceSessionId:   deviceSessionId,
-		CorrelationId:     event.RequestId,
-		TechnicalUsername: event.TechnicalUsername,
-	}
+	clientIpAddress, _ := event.AdditionalData[constant.HeaderClientIpAddress].(string)
+	return append(headers,
+		core.MessageHeader{
+			Key:   []byte(constant.HeaderCorrelationId),
+			Value: []byte(event.RequestId),
+		},
+		core.MessageHeader{
+			Key:   []byte(constant.HeaderDeviceId),
+			Value: []byte(deviceId),
+		},
+		core.MessageHeader{
+			Key:   []byte(constant.HeaderDeviceSessionId),
+			Value: []byte(deviceSessionId),
+		},
+		core.MessageHeader{
+			Key:   []byte(constant.HeaderClientIpAddress),
+			Value: []byte(clientIpAddress),
+		})
+}
+
+func (p ProduceMessage) makeMessageMetadata(metadata map[string]interface{}, event *webEvent.AbstractEvent) map[string]interface{} {
+	metadata[kafkaConstant.LoggingContext] = webLog.BuildLoggingContextFromEvent(event)
+	return metadata
 }

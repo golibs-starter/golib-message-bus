@@ -6,6 +6,7 @@ import (
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/core"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/impl"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/listener"
+	"gitlab.id.vin/vincart/golib-message-bus/kafka/logging"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/properties"
 	"go.uber.org/fx"
 )
@@ -27,7 +28,9 @@ func KafkaAdminOpt() fx.Option {
 func KafkaProducerOpt() fx.Option {
 	return fx.Options(
 		fx.Provide(impl.NewSaramaProducer),
-		fx.Provide(listener.NewProduceMessage),
+		golib.ProvideProps(properties.NewEventProducer),
+		golib.ProvideEventListener(listener.NewProduceMessage),
+		fx.Invoke(logging.ProducerErrorsHandler),
 	)
 }
 

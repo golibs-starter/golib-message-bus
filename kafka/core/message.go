@@ -1,10 +1,11 @@
 package core
 
 type Message struct {
-	Topic   string
-	Key     []byte
-	Value   []byte
-	Headers []MessageHeader
+	Topic    string
+	Key      []byte
+	Value    []byte
+	Headers  []MessageHeader
+	Metadata interface{}
 }
 
 type MessageHeader struct {
