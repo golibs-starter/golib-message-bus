@@ -21,6 +21,10 @@ type TestProducer struct {
 	message *core.Message
 }
 
+func (t *TestProducer) Successes() <-chan *core.Message {
+	panic("implement me")
+}
+
 func (t *TestProducer) Errors() <-chan *core.ProducerError {
 	panic("implement me")
 }
