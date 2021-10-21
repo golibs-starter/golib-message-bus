@@ -6,11 +6,10 @@ import (
 	"gitlab.id.vin/vincart/golib/event"
 	"gitlab.id.vin/vincart/golib/log"
 	"gitlab.id.vin/vincart/golib/web/constant"
-	webLog "gitlab.id.vin/vincart/golib/web/log"
 	"strings"
 )
 
-func ProducerErrorsHandler(producer core.AsyncProducer, eventProps *event.Properties) {
+func ProducerErrorHandler(producer core.AsyncProducer, eventProps *event.Properties) {
 	notLogPayloadForEvents := make(map[string]bool)
 	for _, e := range eventProps.Log.NotLogPayloadForEvents {
 		notLogPayloadForEvents[e] = true
@@ -22,28 +21,16 @@ func ProducerErrorsHandler(producer core.AsyncProducer, eventProps *event.Proper
 				eventName, _ := metadata[kafkaConstant.EventName].(string)
 				logContext := []interface{}{constant.ContextReqMeta, getLoggingContext(metadata)}
 				if notLogPayloadForEvents[strings.ToLower(eventName)] {
-					log.Errorw(logContext, "Exception while sending message [%s], id [%s], headers [%v] to kafka topic [%s]",
-						eventName, eventId, msg.Msg.Headers, msg.Msg.Topic)
+					log.Errorw(logContext, "Exception while sending message [%s], id [%s], headers [%s] to kafka topic [%s]. Error [%s]",
+						eventName, eventId, msg.Msg.Headers, msg.Msg.Topic, msg.Error())
 				} else {
-					log.Errorw(logContext, "Exception while sending message [%s], id [%s], headers [%v], payload [%s] to kafka topic [%s]",
-						eventName, eventId, msg.Msg.Headers, string(msg.Msg.Value), msg.Msg.Topic)
+					log.Errorw(logContext, "Exception while sending message [%s], id [%s], headers [%s], payload [%s] to kafka topic [%s]. Error [%s]",
+						eventName, eventId, msg.Msg.Headers, string(msg.Msg.Value), msg.Msg.Topic, msg.Error())
 				}
 			} else {
-				log.Errorf("Exception while sending message headers [%v], payload [%s] to kafka topic [%s]",
-					msg.Msg.Headers, string(msg.Msg.Value), msg.Msg.Topic)
+				log.Errorf("Exception while sending message headers [%s], payload [%s] to kafka topic [%s]. Error [%s]",
+					msg.Msg.Headers, string(msg.Msg.Value), msg.Msg.Topic, msg.Error())
 			}
 		}
 	}()
-}
-
-func getLoggingContext(metadata map[string]interface{}) *webLog.LoggingContext {
-	loggingCtx := metadata[kafkaConstant.LoggingContext]
-	if loggingCtx == nil {
-		return nil
-	}
-	ctx, ok := loggingCtx.(*webLog.LoggingContext)
-	if !ok {
-		return nil
-	}
-	return ctx
 }

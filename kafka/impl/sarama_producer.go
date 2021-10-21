@@ -1,17 +1,16 @@
 package impl
 
 import (
-	"fmt"
 	"github.com/Shopify/sarama"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/core"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/properties"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/utils"
-	"sync"
 )
 
 type SaramaProducer struct {
-	producer sarama.AsyncProducer
-	errorsCh chan *core.ProducerError
+	producer    sarama.AsyncProducer
+	errorsCh    chan *core.ProducerError
+	successesCh chan *core.Message
 }
 
 func NewSaramaProducer(props *properties.Client) (core.AsyncProducer, error) {
@@ -22,9 +21,10 @@ func NewSaramaProducer(props *properties.Client) (core.AsyncProducer, error) {
 	config.Version = sarama.V1_1_0_0
 	config.Producer.Flush.Messages = props.Producer.FlushMessages
 	config.Producer.Flush.Frequency = props.Producer.FlushFrequency
-	config.Producer.Return.Successes = false
+	config.Producer.Return.Successes = true
 	config.Producer.Return.Errors = true
 	config.Producer.Partitioner = sarama.NewHashPartitioner
+	//config.Producer.MaxMessageBytes = 1
 
 	if props.Producer.SecurityProtocol == core.SecurityProtocolTls {
 		tlsConfig, err := utils.NewTLSConfig(
@@ -44,17 +44,33 @@ func NewSaramaProducer(props *properties.Client) (core.AsyncProducer, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &SaramaProducer{
-		producer: asyncProducer,
-		errorsCh: make(chan *core.ProducerError),
-	}, nil
+	p := &SaramaProducer{
+		producer:    asyncProducer,
+		errorsCh:    make(chan *core.ProducerError),
+		successesCh: make(chan *core.Message),
+	}
+	go func() {
+		for e := range asyncProducer.Successes() {
+			p.successesCh <- p.toCoreMessage(e)
+		}
+	}()
+	go func() {
+		for e := range asyncProducer.Errors() {
+			p.errorsCh <- &core.ProducerError{
+				Msg: p.toCoreMessage(e.Msg),
+				Err: e.Err,
+			}
+		}
+	}()
+	return p, nil
 }
 
 func (p *SaramaProducer) Send(m *core.Message) {
 	msg := &sarama.ProducerMessage{
-		Topic:   m.Topic,
-		Value:   sarama.ByteEncoder(m.Value),
-		Headers: p.toSaramaHeaders(m.Headers),
+		Topic:    m.Topic,
+		Value:    sarama.ByteEncoder(m.Value),
+		Headers:  p.toSaramaHeaders(m.Headers),
+		Metadata: m.Metadata,
 	}
 	if m.Key != nil {
 		msg.Key = sarama.ByteEncoder(m.Key)
@@ -62,33 +78,16 @@ func (p *SaramaProducer) Send(m *core.Message) {
 	p.producer.Input() <- msg
 }
 
+func (p *SaramaProducer) Successes() <-chan *core.Message {
+	return p.successesCh
+}
+
 func (p *SaramaProducer) Errors() <-chan *core.ProducerError {
-	err := <-p.producer.Errors()
-	p.errorsCh <- &core.ProducerError{
-		Msg: p.toCoreMessage(err.Msg),
-		Err: err.Err,
-	}
 	return p.errorsCh
 }
 
 func (p *SaramaProducer) Close() {
-	var wg sync.WaitGroup
 	p.producer.AsyncClose()
-
-	wg.Add(2)
-	go func() {
-		for range p.producer.Successes() {
-			fmt.Println("Unexpected message on Successes()")
-		}
-		wg.Done()
-	}()
-	go func() {
-		for msg := range p.producer.Errors() {
-			fmt.Println(msg.Err)
-		}
-		wg.Done()
-	}()
-	wg.Wait()
 }
 
 func (p SaramaProducer) toCoreMessage(msg *sarama.ProducerMessage) *core.Message {

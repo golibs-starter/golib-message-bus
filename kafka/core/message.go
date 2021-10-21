@@ -1,5 +1,7 @@
 package core
 
+import "fmt"
+
 type Message struct {
 	Topic    string
 	Key      []byte
@@ -11,4 +13,8 @@ type Message struct {
 type MessageHeader struct {
 	Key   []byte
 	Value []byte
+}
+
+func (m MessageHeader) String() string {
+	return fmt.Sprintf("[Key: %s, Value: %s]", string(m.Key), string(m.Value))
 }

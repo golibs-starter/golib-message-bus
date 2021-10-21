@@ -89,20 +89,13 @@ func (p ProduceMessage) Handle(event pubsub.Event) {
 		},
 	}
 	if webAbsEvent != nil {
-		message.Headers = p.makeMessageHeaders(message.Headers, webAbsEvent)
-		message.Metadata = p.makeMessageMetadata(message.Metadata.(map[string]interface{}), webAbsEvent)
+		message.Headers = p.appendMsgHeaders(message.Headers, webAbsEvent)
+		message.Metadata = p.appendMsgMetadata(message.Metadata.(map[string]interface{}), webAbsEvent)
 	}
 	p.producer.Send(&message)
-	if p.notLogPayloadForEvents[lcEvent] {
-		webLog.Infoe(event, "Success to produce Kafka message [%s] with id [%s] to topic [%s]",
-			event.Name(), event.Identifier(), message.Topic)
-		return
-	}
-	webLog.Infoe(event, "Success to produce Kafka message [%s] with id [%s] to topic [%s], value [%s]",
-		event.Name(), event.Identifier(), message.Topic, string(msgBytes))
 }
 
-func (p ProduceMessage) makeMessageHeaders(headers []core.MessageHeader, event *webEvent.AbstractEvent) []core.MessageHeader {
+func (p ProduceMessage) appendMsgHeaders(headers []core.MessageHeader, event *webEvent.AbstractEvent) []core.MessageHeader {
 	deviceId, _ := event.AdditionalData[constant.HeaderDeviceId].(string)
 	deviceSessionId, _ := event.AdditionalData[constant.HeaderDeviceSessionId].(string)
 	clientIpAddress, _ := event.AdditionalData[constant.HeaderClientIpAddress].(string)
@@ -125,7 +118,7 @@ func (p ProduceMessage) makeMessageHeaders(headers []core.MessageHeader, event *
 		})
 }
 
-func (p ProduceMessage) makeMessageMetadata(metadata map[string]interface{}, event *webEvent.AbstractEvent) map[string]interface{} {
+func (p ProduceMessage) appendMsgMetadata(metadata map[string]interface{}, event *webEvent.AbstractEvent) map[string]interface{} {
 	metadata[kafkaConstant.LoggingContext] = webLog.BuildLoggingContextFromEvent(event)
 	return metadata
 }

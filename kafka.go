@@ -30,7 +30,8 @@ func KafkaProducerOpt() fx.Option {
 		fx.Provide(impl.NewSaramaProducer),
 		golib.ProvideProps(properties.NewEventProducer),
 		golib.ProvideEventListener(listener.NewProduceMessage),
-		fx.Invoke(logging.ProducerErrorsHandler),
+		fx.Invoke(logging.ProducerErrorHandler),
+		fx.Invoke(logging.ProducerSuccessHandler),
 	)
 }
 
