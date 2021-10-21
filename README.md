@@ -26,7 +26,7 @@ options := []fx.Option{
 ### Configuration
 ```yaml
 application:
-  kafka:
+  kafka: # Configuration for KafkaPropsOpt()
     bootstrapServers: kafka1:9092,kafka2:9092 # Kafka brokers to connect to. Separate with commas. By default, localhost:9092 is used.
     securityProtocol: TLS # Whether to use TLS when connecting to the broker. By default, unsecured connection is used (leave empty).
     clientId: vincart # A user-provided string sent with every request to the brokers for logging, debugging, and auditing purposes.
@@ -64,4 +64,29 @@ application:
         keyFileLocation: "config/certs/test.dev-key.pem"
         caFileLocation: "config/certs/test.dev-ca.pem"
         insecureSkipVerify: false
+
+vinid:
+  kafka:
+    topics: # Configuration for KafkaAdminOpt()
+      - name: c1.http-request # Topic name when auto create topics is enabled
+        partitions: 1 # The number of partitions when topic is created. Default: 1.
+        replicaFactor: 1 # The number of copies of a topic in a Kafka cluster. Default: 1
+        retention: 72h # The period of time the topic will retain old log segments before deleting or compacting them. Default 72h.
+      - name: c1.order.order-created
+        partitions: 1
+        replicaFactor: 1
+        retention: 72h
+
+  messagebus:
+    event:
+      producer: # Configuration for KafkaProducerOpt()
+        topicMappings:
+          RequestCompletedEvent:
+            topicName: c1.http-request # Defines the topic that event will be sent to.
+            transactional: false # Enable/disable transactional when sending event message.
+            disable: false # Enable/disable send event message
+          OrderCreatedEvent:
+            topicName: c1.order.order-created
+            transactional: false
+            disable: true
 ```
