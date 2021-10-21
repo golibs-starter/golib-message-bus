@@ -9,5 +9,3 @@ require (
 	gitlab.id.vin/vincart/golib v0.8.1
 	go.uber.org/fx v1.13.1
 )
-
-replace gitlab.id.vin/vincart/golib => ../golib

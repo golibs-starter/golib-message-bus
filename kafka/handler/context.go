@@ -1,4 +1,4 @@
-package logging
+package handler
 
 import (
 	kafkaConstant "gitlab.id.vin/vincart/golib-message-bus/kafka/constant"

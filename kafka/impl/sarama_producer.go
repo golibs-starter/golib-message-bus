@@ -19,12 +19,11 @@ func NewSaramaProducer(props *properties.Client) (core.AsyncProducer, error) {
 		config.ClientID = props.Producer.ClientId
 	}
 	config.Version = sarama.V1_1_0_0
+	config.Producer.Partitioner = sarama.NewHashPartitioner
 	config.Producer.Flush.Messages = props.Producer.FlushMessages
 	config.Producer.Flush.Frequency = props.Producer.FlushFrequency
 	config.Producer.Return.Successes = true
 	config.Producer.Return.Errors = true
-	config.Producer.Partitioner = sarama.NewHashPartitioner
-	//config.Producer.MaxMessageBytes = 1
 
 	if props.Producer.SecurityProtocol == core.SecurityProtocolTls {
 		tlsConfig, err := utils.NewTLSConfig(

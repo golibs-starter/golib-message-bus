@@ -1,4 +1,4 @@
-package logging
+package handler
 
 import (
 	kafkaConstant "gitlab.id.vin/vincart/golib-message-bus/kafka/constant"
@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func ProducerErrorHandler(producer core.AsyncProducer, eventProps *event.Properties) {
+func ProducerErrorLogHandler(producer core.AsyncProducer, eventProps *event.Properties) {
 	notLogPayloadForEvents := make(map[string]bool)
 	for _, e := range eventProps.Log.NotLogPayloadForEvents {
 		notLogPayloadForEvents[e] = true
