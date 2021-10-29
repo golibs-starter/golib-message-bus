@@ -2,6 +2,7 @@ package impl
 
 import (
 	"github.com/Shopify/sarama"
+	"github.com/pkg/errors"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/core"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/properties"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/utils"
@@ -11,9 +12,10 @@ type SaramaProducer struct {
 	producer    sarama.AsyncProducer
 	errorsCh    chan *core.ProducerError
 	successesCh chan *core.Message
+	mapper      *SaramaMapper
 }
 
-func NewSaramaProducer(props *properties.Client) (core.AsyncProducer, error) {
+func NewSaramaProducer(props *properties.Client, mapper *SaramaMapper) (core.AsyncProducer, error) {
 	config := sarama.NewConfig()
 	if props.Producer.ClientId != "" {
 		config.ClientID = props.Producer.ClientId
@@ -26,13 +28,16 @@ func NewSaramaProducer(props *properties.Client) (core.AsyncProducer, error) {
 	config.Producer.Return.Errors = true
 
 	if props.Producer.SecurityProtocol == core.SecurityProtocolTls {
+		if props.Producer.Tls == nil {
+			return nil, errors.New("Tls config not found when using SecurityProtocol=TLS")
+		}
 		tlsConfig, err := utils.NewTLSConfig(
 			props.Producer.Tls.CertFileLocation,
 			props.Producer.Tls.KeyFileLocation,
 			props.Producer.Tls.CaFileLocation,
 		)
 		if err != nil {
-			return nil, err
+			return nil, errors.WithMessage(err, "Error when load TLS config")
 		}
 		tlsConfig.InsecureSkipVerify = props.Producer.Tls.InsecureSkipVerify
 		config.Net.TLS.Enable = true
@@ -41,12 +46,13 @@ func NewSaramaProducer(props *properties.Client) (core.AsyncProducer, error) {
 
 	asyncProducer, err := sarama.NewAsyncProducer(props.Producer.BootstrapServers, config)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(err, "Error when create new AsyncProducer")
 	}
 	p := &SaramaProducer{
 		producer:    asyncProducer,
 		errorsCh:    make(chan *core.ProducerError),
 		successesCh: make(chan *core.Message),
+		mapper:      mapper,
 	}
 	go func() {
 		for e := range asyncProducer.Successes() {
@@ -68,7 +74,7 @@ func (p *SaramaProducer) Send(m *core.Message) {
 	msg := &sarama.ProducerMessage{
 		Topic:    m.Topic,
 		Value:    sarama.ByteEncoder(m.Value),
-		Headers:  p.toSaramaHeaders(m.Headers),
+		Headers:  p.mapper.ToSaramaHeaders(m.Headers),
 		Metadata: m.Metadata,
 	}
 	if m.Key != nil {
@@ -101,29 +107,7 @@ func (p SaramaProducer) toCoreMessage(msg *sarama.ProducerMessage) *core.Message
 		Topic:    msg.Topic,
 		Key:      key,
 		Value:    value,
-		Headers:  p.toCoreHeaders(msg.Headers),
+		Headers:  p.mapper.ToCoreHeaders(msg.Headers),
 		Metadata: msg.Metadata,
 	}
-}
-
-func (p SaramaProducer) toSaramaHeaders(headers []core.MessageHeader) []sarama.RecordHeader {
-	saramaHeaders := make([]sarama.RecordHeader, 0)
-	for _, header := range headers {
-		saramaHeaders = append(saramaHeaders, sarama.RecordHeader{
-			Key:   header.Key,
-			Value: header.Value,
-		})
-	}
-	return saramaHeaders
-}
-
-func (p SaramaProducer) toCoreHeaders(headers []sarama.RecordHeader) []core.MessageHeader {
-	coreHeaders := make([]core.MessageHeader, 0)
-	for _, header := range headers {
-		coreHeaders = append(coreHeaders, core.MessageHeader{
-			Key:   header.Key,
-			Value: header.Value,
-		})
-	}
-	return coreHeaders
 }

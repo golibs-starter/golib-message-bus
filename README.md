@@ -77,6 +77,17 @@ vinid:
         replicaFactor: 1
         retention: 72h
 
+    consumer: # Configuration for KafkaConsumerOpt()
+      topics:
+        PushRequestCompletedToElasticSearchHandler: # It has to equal to the struct name of handler 
+          topic: c1.http-request # The topic that consumed by handler
+          groupId: c1.http-request.PushRequestCompletedEsHandler.local
+          enable: true
+        PushOrderToElasticSearchHandler:
+          topic: c1.order.order-created
+          groupId: c1.order.order-created.PushRequestCompletedEsHandler.local
+          enable: true
+
   messagebus:
     event:
       producer: # Configuration for KafkaProducerOpt()
