@@ -4,8 +4,8 @@ import (
 	kafkaConstant "gitlab.id.vin/vincart/golib-message-bus/kafka/constant"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/core"
 	"gitlab.id.vin/vincart/golib/event"
-	"gitlab.id.vin/vincart/golib/log"
 	"gitlab.id.vin/vincart/golib/web/constant"
+	"gitlab.id.vin/vincart/golib/web/log"
 	"strings"
 )
 

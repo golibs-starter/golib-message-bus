@@ -7,7 +7,7 @@ import (
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/core"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/properties"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/utils"
-	"gitlab.id.vin/vincart/golib/log"
+	"gitlab.id.vin/vincart/golib/web/log"
 	"strings"
 	"time"
 )
@@ -80,7 +80,7 @@ func (s SaramaAdmin) CreateTopics(topics []core.TopicConfiguration) error {
 		}); err != nil {
 			return err
 		}
-		log.Info("All Kafka topics has been created")
+		log.Infof("All Kafka topics has been created")
 
 		// Close connection to broker
 		if err := broker.Close(); err != nil {

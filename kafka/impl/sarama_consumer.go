@@ -8,7 +8,7 @@ import (
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/core"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/properties"
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/utils"
-	"gitlab.id.vin/vincart/golib/log"
+	"gitlab.id.vin/vincart/golib/web/log"
 )
 
 type SaramaConsumer struct {
@@ -82,7 +82,7 @@ func (c *SaramaConsumer) Start(ctx context.Context) {
 	// Track errors
 	go func() {
 		for err := range c.consumerGroup.Errors() {
-			log.Error("ConsumerGroup error, detail: ", err)
+			log.Errorf("ConsumerGroup error, detail: [%v]", err)
 		}
 	}()
 
@@ -95,9 +95,9 @@ func (c *SaramaConsumer) Start(ctx context.Context) {
 		err := c.consumerGroup.Consume(ctx, topics, handler)
 		if err != nil {
 			if !c.running {
-				log.Info("Consumer with topic %v is closed", topics)
+				log.Infof("Consumer with topic %v is closed", topics)
 			} else {
-				log.Info("Error: ", err)
+				log.Errorf("Error when consume message in topics %v, detail [%v]", topics, err)
 			}
 		}
 	}
