@@ -7,6 +7,7 @@ Message Bus solutions for Golang project. Kafka is now supported.
 See [GoLib Instruction](https://gitlab.id.vin/vincart/golib/-/blob/develop/README.md)
 
 Both `go get` and `go mod` are supported.
+
 ```shell
 go get gitlab.id.vin/vincart/golib-message-bus
 ```
@@ -17,16 +18,28 @@ Using `fx.Option` to include dependencies for injection.
 
 ```go
 options := []fx.Option{
-    golibmsg.KafkaPropsOpt(),//required
-    golibmsg.KafkaAdminOpt(),//optional, just include when you want to create topics if it doesn't exist.
-    golibmsg.KafkaProducerOpt(),//optional, just include when you want to produce message to Kafka.
+    // Required
+    golibmsg.KafkaCommonOpt(),
+
+    // When you want to create topics if it doesn't exist.
+    golibmsg.KafkaAdminOpt(),
+
+    // When you want to produce message to Kafka.
+    golibmsg.KafkaProducerOpt(),
+
+    // When you want to consume message from Kafka.
+    golibmsg.KafkaConsumerOpt(),
+
+    // When you want to register a consumer
+    golibmsg.ProvideConsumer(consumer.NewCustomConsumer)
 }
 ```
 
 ### Configuration
+
 ```yaml
-application:
-  kafka: # Configuration for KafkaPropsOpt()
+app:
+  kafka: # Configuration for KafkaCommonOpt()
     bootstrapServers: kafka1:9092,kafka2:9092 # Kafka brokers to connect to. Separate with commas. By default, localhost:9092 is used.
     securityProtocol: TLS # Whether to use TLS when connecting to the broker. By default, unsecured connection is used (leave empty).
     clientId: vincart # A user-provided string sent with every request to the brokers for logging, debugging, and auditing purposes.
@@ -79,10 +92,10 @@ vinid:
 
     consumer: # Configuration for KafkaConsumerOpt()
       topics:
-        PushRequestCompletedToElasticSearchHandler: # It has to equal to the struct name of handler 
-          topic: c1.http-request # The topic that consumed by handler
-          groupId: c1.http-request.PushRequestCompletedEsHandler.local
-          enable: true
+        PushRequestCompletedToElasticSearchHandler: # It has to equal to the struct name of consumer
+          topic: c1.http-request # The topic that consumed by consumer
+          groupId: c1.http-request.PushRequestCompletedEsHandler.local # The group that consumed by consumer
+          enable: true # Enable/disable consumer
         PushOrderToElasticSearchHandler:
           topic: c1.order.order-created
           groupId: c1.order.order-created.PushRequestCompletedEsHandler.local

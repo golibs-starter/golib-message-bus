@@ -19,7 +19,7 @@ type Client struct {
 }
 
 func (p Client) Prefix() string {
-	return "application.kafka"
+	return "app.kafka"
 }
 
 func (p *Client) PostBinding() error {
