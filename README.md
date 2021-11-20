@@ -4,7 +4,7 @@ Message Bus solutions for Golang project. Kafka is now supported.
 
 ### Setup instruction
 
-See [GoLib Instruction](https://gitlab.id.vin/vincart/golib/-/blob/develop/README.md)
+Base setup, see [GoLib Instruction](https://gitlab.id.vin/vincart/golib/-/blob/develop/README.md)
 
 Both `go get` and `go mod` are supported.
 
@@ -17,21 +17,30 @@ go get gitlab.id.vin/vincart/golib-message-bus
 Using `fx.Option` to include dependencies for injection.
 
 ```go
-options := []fx.Option{
-    // Required
-    golibmsg.KafkaCommonOpt(),
+package main
 
-    // When you want to create topics if it doesn't exist.
-    golibmsg.KafkaAdminOpt(),
+import (
+    "gitlab.id.vin/vincart/golib-message-bus"
+    "go.uber.org/fx"
+)
 
-    // When you want to produce message to Kafka.
-    golibmsg.KafkaProducerOpt(),
+func main()  {
+    options := []fx.Option{
+        // Required
+        golibmsg.KafkaCommonOpt(),
 
-    // When you want to consume message from Kafka.
-    golibmsg.KafkaConsumerOpt(),
+        // When you want to create topics if it doesn't exist.
+        golibmsg.KafkaAdminOpt(),
 
-    // When you want to register a consumer
-    golibmsg.ProvideConsumer(consumer.NewCustomConsumer)
+        // When you want to produce message to Kafka.
+        golibmsg.KafkaProducerOpt(),
+
+        // When you want to consume message from Kafka.
+        golibmsg.KafkaConsumerOpt(),
+
+        // When you want to register a consumer
+        golibmsg.ProvideConsumer(consumer.NewCustomConsumer),
+    }
 }
 ```
 
