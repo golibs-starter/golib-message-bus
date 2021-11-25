@@ -79,25 +79,28 @@ func NewSaramaConsumer(
 }
 
 func (c *SaramaConsumer) Start(ctx context.Context) {
+	topics := []string{c.topic}
+	consumerName := utils.GetStructName(c.handler)
+	log.Infof("Consumer [%s] with topic [%v] is starting", consumerName, topics)
+
 	// Track errors
 	go func() {
 		for err := range c.consumerGroup.Errors() {
-			log.Errorf("ConsumerGroup error, detail: [%v]", err)
+			log.Errorf("ConsumerGroup error for consumer [%s], detail: [%v]", consumerName, err)
 		}
 	}()
 
 	// Iterate over consumers sessions.
 	c.running = true
 	for c.running {
-		topics := []string{c.topic}
 		handler := NewConsumerGroupHandler(c.handler.HandlerFunc, c.mapper)
-		log.Infof("Consumer with topic %v is running", topics)
-		err := c.consumerGroup.Consume(ctx, topics, handler)
-		if err != nil {
+		log.Infof("Consumer [%s] with topic [%v] is running", consumerName, topics)
+		if err := c.consumerGroup.Consume(ctx, topics, handler); err != nil {
 			if !c.running {
-				log.Infof("Consumer with topic %v is closed", topics)
+				log.Infof("Consumer [%s] with topic [%v] is closed", consumerName, topics)
 			} else {
-				log.Errorf("Error when consume message in topics %v, detail [%v]", topics, err)
+				log.Errorf("Error when consume message in topics [%v] for consumer [%s], detail [%v]",
+					topics, consumerName, err)
 			}
 		}
 	}
