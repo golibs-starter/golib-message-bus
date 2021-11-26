@@ -9,11 +9,10 @@ import (
 	"gitlab.id.vin/vincart/golib-message-bus/kafka/properties"
 	"gitlab.id.vin/vincart/golib/config"
 	"gitlab.id.vin/vincart/golib/event"
-	"gitlab.id.vin/vincart/golib/log"
 	"gitlab.id.vin/vincart/golib/web/constant"
 	webContext "gitlab.id.vin/vincart/golib/web/context"
 	webEvent "gitlab.id.vin/vincart/golib/web/event"
-	log2 "gitlab.id.vin/vincart/golib/web/log"
+	webLog "gitlab.id.vin/vincart/golib/web/log"
 	"testing"
 )
 
@@ -49,14 +48,7 @@ func newTestEvent(ctx context.Context, payload interface{}) *TestEvent {
 	return &TestEvent{AbstractEvent: webEvent.NewAbstractEvent(ctx, "TestEvent"), PayloadData: payload}
 }
 
-func replaceTestGlobalLogger(t *testing.T) {
-	logger, err := log.NewLogger(&log.Options{Development: true})
-	assert.NoError(t, err)
-	log.ReplaceGlobal(logger)
-}
-
 func TestProduceMessage_WhenTopicMappingNotExists_ShouldDoNothing(t *testing.T) {
-	replaceTestGlobalLogger(t)
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
 	eventProducerProps := &properties.EventProducer{TopicMappings: map[string]properties.EventTopic{}}
@@ -67,7 +59,6 @@ func TestProduceMessage_WhenTopicMappingNotExists_ShouldDoNothing(t *testing.T) 
 }
 
 func TestProduceMessage_WhenEventTopicIsDisabled_ShouldDoNothing(t *testing.T) {
-	replaceTestGlobalLogger(t)
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
 	eventProducerProps := &properties.EventProducer{TopicMappings: map[string]properties.EventTopic{
@@ -84,7 +75,6 @@ func TestProduceMessage_WhenEventTopicIsDisabled_ShouldDoNothing(t *testing.T) {
 }
 
 func TestProduceMessage_WhenEventTopicNameIsEmpty_ShouldDoNothing(t *testing.T) {
-	replaceTestGlobalLogger(t)
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
 	eventProducerProps := &properties.EventProducer{TopicMappings: map[string]properties.EventTopic{
@@ -97,7 +87,6 @@ func TestProduceMessage_WhenEventTopicNameIsEmpty_ShouldDoNothing(t *testing.T) 
 }
 
 func TestProduceMessage_WhenIsApplicationEvent_ShouldSendMessageWithCorrectMessageAndHeaders(t *testing.T) {
-	replaceTestGlobalLogger(t)
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
 	eventProducerProps := &properties.EventProducer{TopicMappings: map[string]properties.EventTopic{
@@ -129,7 +118,6 @@ func TestProduceMessage_WhenIsApplicationEvent_ShouldSendMessageWithCorrectMessa
 }
 
 func TestProduceMessage_WhenIsWebEvent_ShouldSendMessageWithCorrectMessageAndHeaders(t *testing.T) {
-	replaceTestGlobalLogger(t)
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
 	eventProducerProps := &properties.EventProducer{TopicMappings: map[string]properties.EventTopic{
@@ -175,8 +163,8 @@ func TestProduceMessage_WhenIsWebEvent_ShouldSendMessageWithCorrectMessageAndHea
 	resultMetadata := producer.message.Metadata.(map[string]interface{})
 	assert.Equal(t, testEvent.Identifier(), resultMetadata[kafkaConstant.EventId])
 	assert.Equal(t, testEvent.Name(), resultMetadata[kafkaConstant.EventName])
-	assert.IsType(t, &log2.LoggingContext{}, resultMetadata[kafkaConstant.LoggingContext])
-	resultLoggingContext := resultMetadata[kafkaConstant.LoggingContext].(*log2.LoggingContext)
+	assert.IsType(t, &webLog.LoggingContext{}, resultMetadata[kafkaConstant.LoggingContext])
+	resultLoggingContext := resultMetadata[kafkaConstant.LoggingContext].(*webLog.LoggingContext)
 	assert.Equal(t, "test-user-id", resultLoggingContext.UserId)
 	assert.Equal(t, "test-technical-username", resultLoggingContext.TechnicalUsername)
 	assert.Equal(t, "test-device-id", resultLoggingContext.DeviceId)
@@ -185,7 +173,6 @@ func TestProduceMessage_WhenIsWebEvent_ShouldSendMessageWithCorrectMessageAndHea
 }
 
 func TestProduceMessage_WhenIsWebEventAndNotLogPayload_ShouldSuccess(t *testing.T) {
-	replaceTestGlobalLogger(t)
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
 	eventProducerProps := &properties.EventProducer{TopicMappings: map[string]properties.EventTopic{
