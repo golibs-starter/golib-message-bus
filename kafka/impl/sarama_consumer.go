@@ -93,8 +93,8 @@ func (c *SaramaConsumer) Start(ctx context.Context) {
 	// Iterate over consumers sessions.
 	c.running = true
 	for c.running {
-		handler := NewConsumerGroupHandler(c.handler.HandlerFunc, c.mapper)
 		log.Infof("Consumer [%s] with topic [%v] is running", consumerName, topics)
+		handler := NewConsumerGroupHandler(c.handler.HandlerFunc, c.mapper)
 		if err := c.consumerGroup.Consume(ctx, topics, handler); err != nil {
 			if !c.running {
 				log.Infof("Consumer [%s] with topic [%v] is closed", consumerName, topics)
