@@ -38,10 +38,15 @@ func (t TestProducer) Close() {
 
 type TestEvent struct {
 	*webEvent.AbstractEvent
+	PayloadData interface{} `json:"payload"`
+}
+
+func (t TestEvent) Payload() interface{} {
+	return t.PayloadData
 }
 
 func newTestEvent(ctx context.Context, payload interface{}) *TestEvent {
-	return &TestEvent{webEvent.NewAbstractEvent(ctx, "TestEvent", payload)}
+	return &TestEvent{AbstractEvent: webEvent.NewAbstractEvent(ctx, "TestEvent"), PayloadData: payload}
 }
 
 func replaceTestGlobalLogger(t *testing.T) {
@@ -57,7 +62,7 @@ func TestProduceMessage_WhenTopicMappingNotExists_ShouldDoNothing(t *testing.T) 
 	eventProducerProps := &properties.EventProducer{TopicMappings: map[string]properties.EventTopic{}}
 	eventProps := &event.Properties{}
 	listener := NewProduceMessage(producer, appProps, eventProducerProps, eventProps)
-	listener.Handle(webEvent.NewAbstractEvent(context.Background(), "TestEvent", nil))
+	listener.Handle(webEvent.NewAbstractEvent(context.Background(), "TestEvent"))
 	assert.Nil(t, producer.message)
 }
 
@@ -74,7 +79,7 @@ func TestProduceMessage_WhenEventTopicIsDisabled_ShouldDoNothing(t *testing.T) {
 	}}
 	eventProps := &event.Properties{}
 	listener := NewProduceMessage(producer, appProps, eventProducerProps, eventProps)
-	listener.Handle(webEvent.NewAbstractEvent(context.Background(), "TestEvent", nil))
+	listener.Handle(webEvent.NewAbstractEvent(context.Background(), "TestEvent"))
 	assert.Nil(t, producer.message)
 }
 
@@ -87,7 +92,7 @@ func TestProduceMessage_WhenEventTopicNameIsEmpty_ShouldDoNothing(t *testing.T) 
 	}}
 	eventProps := &event.Properties{}
 	listener := NewProduceMessage(producer, appProps, eventProducerProps, eventProps)
-	listener.Handle(webEvent.NewAbstractEvent(context.Background(), "TestEvent", nil))
+	listener.Handle(webEvent.NewAbstractEvent(context.Background(), "TestEvent"))
 	assert.Nil(t, producer.message)
 }
 
@@ -100,7 +105,7 @@ func TestProduceMessage_WhenIsApplicationEvent_ShouldSendMessageWithCorrectMessa
 	}}
 	eventProps := &event.Properties{}
 	listener := NewProduceMessage(producer, appProps, eventProducerProps, eventProps)
-	testEvent := event.NewApplicationEvent("TestApplicationEvent", nil)
+	testEvent := event.NewApplicationEvent("TestApplicationEvent")
 	listener.Handle(testEvent)
 
 	assert.NotNil(t, producer.message)
@@ -192,7 +197,7 @@ func TestProduceMessage_WhenIsWebEventAndNotLogPayload_ShouldSuccess(t *testing.
 		},
 	}
 	listener := NewProduceMessage(producer, appProps, eventProducerProps, eventProps)
-	testEvent := webEvent.NewAbstractEvent(context.Background(), "TestEvent", nil)
+	testEvent := webEvent.NewAbstractEvent(context.Background(), "TestEvent")
 	listener.Handle(testEvent)
 	assert.NotNil(t, producer.message)
 }
