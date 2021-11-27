@@ -51,7 +51,7 @@ app:
   kafka: # Configuration for KafkaCommonOpt()
     bootstrapServers: kafka1:9092,kafka2:9092 # Kafka brokers to connect to. Separate with commas. By default, localhost:9092 is used.
     securityProtocol: TLS # Whether to use TLS when connecting to the broker. By default, unsecured connection is used (leave empty).
-    clientId: vincart # A user-provided string sent with every request to the brokers for logging, debugging, and auditing purposes.
+    clientId: golib # A user-provided string sent with every request to the brokers for logging, debugging, and auditing purposes.
     tls:
       certFileLocation: "config/certs/test.dev-cert.pem" # A file contains public key from a pair of files. The file must contain PEM encoded data.
       keyFileLocation: "config/certs/test.dev-key.pem" # A file contains private key from a pair of files. The file must contain PEM encoded data.
@@ -60,7 +60,7 @@ app:
     admin:
       bootstrapServers: kafka1:9092,kafka2:9092
       securityProtocol: TLS
-      clientId: vincart
+      clientId: golib
       tls:
         certFileLocation: "config/certs/test.dev-cert.pem"
         keyFileLocation: "config/certs/test.dev-key.pem"
@@ -69,7 +69,7 @@ app:
     producer:
       bootstrapServers: kafka1:9092,kafka2:9092
       securityProtocol: TLS
-      clientId: vincart
+      clientId: golib
       tls:
         certFileLocation: "config/certs/test.dev-cert.pem"
         keyFileLocation: "config/certs/test.dev-key.pem"
@@ -80,7 +80,7 @@ app:
     consumer:
       bootstrapServers: kafka1:9092,kafka2:9092
       securityProtocol: TLS
-      clientId: vincart
+      clientId: golib
       tls:
         certFileLocation: "config/certs/test.dev-cert.pem"
         keyFileLocation: "config/certs/test.dev-key.pem"
