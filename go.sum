@@ -290,6 +290,8 @@ github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9dec
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/zenthangplus/defaults v1.6.2-beta h1:2QDyud3qVvnfi/g0U3ub3EB0PI9H+D7osUAbdwCBY5Q=
 github.com/zenthangplus/defaults v1.6.2-beta/go.mod h1:WUOsmf5WcbZo/HrGwmDrpXcM9AF5ugQ4TUkijs8MQZs=
+gitlab.com/golibs-starter/golib v0.9.7-beta h1:ibDQTPjWNomXi7WFSsV2+SgtYZ1llHcMAgP6wxWi7Ig=
+gitlab.com/golibs-starter/golib v0.9.7-beta/go.mod h1:zq/DHoPbzgxJw70R/7uuP3XeEVZun7Em3mv25OxIH98=
 gitlab.com/golibs-starter/golib v0.9.7 h1:zjMYQHvyKZsCafiI6PaUHDHrJD8cJMK3CasHDl6OotE=
 gitlab.com/golibs-starter/golib v0.9.7/go.mod h1:Ln2gUkDbOos6jSNEL3Fdf/3jxE3w3hnrpDTyGD0rCFM=
 go.etcd.io/etcd/api/v3 v3.5.0/go.mod h1:cbVKeC6lCfl7j/8jBhAK6aIYO9XOjdptoxU/nLQcPvs=
