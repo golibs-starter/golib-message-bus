@@ -4,11 +4,11 @@ import (
 	"context"
 	"github.com/Shopify/sarama"
 	"github.com/pkg/errors"
-	"gitlab.id.vin/vincart/golib-message-bus/kafka/constant"
-	"gitlab.id.vin/vincart/golib-message-bus/kafka/core"
-	"gitlab.id.vin/vincart/golib-message-bus/kafka/properties"
-	"gitlab.id.vin/vincart/golib-message-bus/kafka/utils"
-	"gitlab.id.vin/vincart/golib/web/log"
+	"gitlab.com/golibs-starter/golib-message-bus/kafka/constant"
+	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
+	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
+	"gitlab.com/golibs-starter/golib-message-bus/kafka/utils"
+	"gitlab.com/golibs-starter/golib/web/log"
 )
 
 type SaramaConsumer struct {

@@ -1,8 +1,8 @@
 package handler
 
 import (
-	kafkaConstant "gitlab.id.vin/vincart/golib-message-bus/kafka/constant"
-	webLog "gitlab.id.vin/vincart/golib/web/log"
+	kafkaConstant "gitlab.com/golibs-starter/golib-message-bus/kafka/constant"
+	webLog "gitlab.com/golibs-starter/golib/web/log"
 )
 
 func getLoggingContext(metadata map[string]interface{}) *webLog.LoggingContext {

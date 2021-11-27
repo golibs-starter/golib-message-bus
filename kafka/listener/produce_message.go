@@ -2,15 +2,15 @@ package listener
 
 import (
 	"encoding/json"
-	kafkaConstant "gitlab.id.vin/vincart/golib-message-bus/kafka/constant"
-	"gitlab.id.vin/vincart/golib-message-bus/kafka/core"
-	"gitlab.id.vin/vincart/golib-message-bus/kafka/properties"
-	"gitlab.id.vin/vincart/golib/config"
-	"gitlab.id.vin/vincart/golib/event"
-	"gitlab.id.vin/vincart/golib/pubsub"
-	"gitlab.id.vin/vincart/golib/web/constant"
-	webEvent "gitlab.id.vin/vincart/golib/web/event"
-	webLog "gitlab.id.vin/vincart/golib/web/log"
+	kafkaConstant "gitlab.com/golibs-starter/golib-message-bus/kafka/constant"
+	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
+	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
+	"gitlab.com/golibs-starter/golib/config"
+	"gitlab.com/golibs-starter/golib/event"
+	"gitlab.com/golibs-starter/golib/pubsub"
+	"gitlab.com/golibs-starter/golib/web/constant"
+	webEvent "gitlab.com/golibs-starter/golib/web/event"
+	webLog "gitlab.com/golibs-starter/golib/web/log"
 	"strings"
 )
 

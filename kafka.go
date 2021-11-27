@@ -1,12 +1,12 @@
 package golibmsg
 
 import (
-	"gitlab.id.vin/vincart/golib"
-	"gitlab.id.vin/vincart/golib-message-bus/kafka/core"
-	"gitlab.id.vin/vincart/golib-message-bus/kafka/handler"
-	"gitlab.id.vin/vincart/golib-message-bus/kafka/impl"
-	"gitlab.id.vin/vincart/golib-message-bus/kafka/listener"
-	"gitlab.id.vin/vincart/golib-message-bus/kafka/properties"
+	"gitlab.com/golibs-starter/golib"
+	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
+	"gitlab.com/golibs-starter/golib-message-bus/kafka/handler"
+	"gitlab.com/golibs-starter/golib-message-bus/kafka/impl"
+	"gitlab.com/golibs-starter/golib-message-bus/kafka/listener"
+	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
 	"go.uber.org/fx"
 )
 

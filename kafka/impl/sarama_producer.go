@@ -3,9 +3,9 @@ package impl
 import (
 	"github.com/Shopify/sarama"
 	"github.com/pkg/errors"
-	"gitlab.id.vin/vincart/golib-message-bus/kafka/core"
-	"gitlab.id.vin/vincart/golib-message-bus/kafka/properties"
-	"gitlab.id.vin/vincart/golib-message-bus/kafka/utils"
+	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
+	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
+	"gitlab.com/golibs-starter/golib-message-bus/kafka/utils"
 )
 
 type SaramaProducer struct {

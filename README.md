@@ -4,12 +4,12 @@ Message Bus solutions for Golang project. Kafka is now supported.
 
 ### Setup instruction
 
-Base setup, see [GoLib Instruction](https://gitlab.id.vin/vincart/golib/-/blob/develop/README.md)
+Base setup, see [GoLib Instruction](https://gitlab.com/golibs-starter/golib/-/blob/develop/README.md)
 
 Both `go get` and `go mod` are supported.
 
 ```shell
-go get gitlab.id.vin/vincart/golib-message-bus
+go get gitlab.com/golibs-starter/golib-message-bus
 ```
 
 ### Usage
@@ -20,7 +20,7 @@ Using `fx.Option` to include dependencies for injection.
 package main
 
 import (
-    "gitlab.id.vin/vincart/golib-message-bus"
+    "gitlab.com/golibs-starter/golib-message-bus"
     "go.uber.org/fx"
 )
 
