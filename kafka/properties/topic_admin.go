@@ -16,5 +16,5 @@ type TopicAdmin struct {
 }
 
 func (h TopicAdmin) Prefix() string {
-	return "vinid.kafka"
+	return "app.kafka.admin"
 }

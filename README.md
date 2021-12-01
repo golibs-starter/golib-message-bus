@@ -48,7 +48,8 @@ func main()  {
 
 ```yaml
 app:
-  kafka: # Configuration for KafkaCommonOpt()
+  kafka:
+    # Configuration for KafkaCommonOpt()
     bootstrapServers: kafka1:9092,kafka2:9092 # Kafka brokers to connect to. Separate with commas. By default, localhost:9092 is used.
     securityProtocol: TLS # Whether to use TLS when connecting to the broker. By default, unsecured connection is used (leave empty).
     clientId: golib # A user-provided string sent with every request to the brokers for logging, debugging, and auditing purposes.
@@ -66,6 +67,16 @@ app:
         keyFileLocation: "config/certs/test.dev-key.pem"
         caFileLocation: "config/certs/test.dev-ca.pem"
         insecureSkipVerify: false
+      # Configuration for KafkaAdminOpt()
+      topics:
+        - name: c1.http-request # Topic name when auto create topics is enabled
+          partitions: 1 # The number of partitions when topic is created. Default: 1.
+          replicaFactor: 1 # The number of copies of a topic in a Kafka cluster. Default: 1
+          retention: 72h # The period of time the topic will retain old log segments before deleting or compacting them. Default 72h.
+        - name: c1.order.order-created
+          partitions: 1
+          replicaFactor: 1
+          retention: 72h
     producer:
       bootstrapServers: kafka1:9092,kafka2:9092
       securityProtocol: TLS
@@ -77,6 +88,16 @@ app:
         insecureSkipVerify: false
       flushMessages: 1
       flushFrequency: 1s
+      # Configuration for KafkaProducerOpt()
+      eventMappings:
+        RequestCompletedEvent:
+          topicName: c1.http-request # Defines the topic that event will be sent to.
+          transactional: false # Enable/disable transactional when sending event message.
+          disable: false # Enable/disable send event message
+        OrderCreatedEvent:
+          topicName: c1.order.order-created
+          transactional: false
+          disable: true
     consumer:
       bootstrapServers: kafka1:9092,kafka2:9092
       securityProtocol: TLS
@@ -86,21 +107,8 @@ app:
         keyFileLocation: "config/certs/test.dev-key.pem"
         caFileLocation: "config/certs/test.dev-ca.pem"
         insecureSkipVerify: false
-
-vinid:
-  kafka:
-    topics: # Configuration for KafkaAdminOpt()
-      - name: c1.http-request # Topic name when auto create topics is enabled
-        partitions: 1 # The number of partitions when topic is created. Default: 1.
-        replicaFactor: 1 # The number of copies of a topic in a Kafka cluster. Default: 1
-        retention: 72h # The period of time the topic will retain old log segments before deleting or compacting them. Default 72h.
-      - name: c1.order.order-created
-        partitions: 1
-        replicaFactor: 1
-        retention: 72h
-
-    consumer: # Configuration for KafkaConsumerOpt()
-      topics:
+      # Configuration for KafkaConsumerOpt()
+      handlerMappings:
         PushRequestCompletedToElasticSearchHandler: # It has to equal to the struct name of consumer
           topic: c1.http-request # The topic that consumed by consumer
           groupId: c1.http-request.PushRequestCompletedEsHandler.local # The group that consumed by consumer
@@ -109,17 +117,4 @@ vinid:
           topic: c1.order.order-created
           groupId: c1.order.order-created.PushRequestCompletedEsHandler.local
           enable: true
-
-  messagebus:
-    event:
-      producer: # Configuration for KafkaProducerOpt()
-        topicMappings:
-          RequestCompletedEvent:
-            topicName: c1.http-request # Defines the topic that event will be sent to.
-            transactional: false # Enable/disable transactional when sending event message.
-            disable: false # Enable/disable send event message
-          OrderCreatedEvent:
-            topicName: c1.order.order-created
-            transactional: false
-            disable: true
 ```

@@ -9,11 +9,11 @@ func NewKafkaConsumer(loader config.Loader) (*KafkaConsumer, error) {
 }
 
 type KafkaConsumer struct {
-	Topics map[string]TopicConsumer
+    HandlerMappings map[string]TopicConsumer
 }
 
 func (c KafkaConsumer) Prefix() string {
-	return "vinid.kafka.consumer"
+	return "app.kafka.consumer"
 }
 
 type TopicConsumer struct {
