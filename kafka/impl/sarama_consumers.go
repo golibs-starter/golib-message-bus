@@ -22,7 +22,7 @@ func NewSaramaConsumers(
 	mapper *SaramaMapper,
 	handlers []core.ConsumerHandler,
 ) (core.Consumer, error) {
-	if len(kafkaConsumerProps.Topics) < 1 {
+	if len(kafkaConsumerProps.HandlerMappings) < 1 {
 		return nil, errors.New("[SaramaConsumers] Missing handler config")
 	}
 
@@ -46,7 +46,7 @@ func NewSaramaConsumers(
 }
 
 func (s *SaramaConsumers) init(handlerMap map[string]core.ConsumerHandler) error {
-	for key, config := range s.kafkaConsumerProps.Topics {
+	for key, config := range s.kafkaConsumerProps.HandlerMappings {
 		if !config.Enable {
 			continue
 		}

@@ -9,11 +9,11 @@ func NewEventProducer(loader config.Loader) (*EventProducer, error) {
 }
 
 type EventProducer struct {
-	TopicMappings map[string]EventTopic
+    EventMappings map[string]EventTopic
 }
 
 func (p EventProducer) Prefix() string {
-	return "vinid.messagebus.event.producer"
+	return "app.kafka.producer"
 }
 
 type EventTopic struct {
