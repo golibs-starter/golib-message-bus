@@ -51,7 +51,7 @@ func newTestEvent(ctx context.Context, payload interface{}) *TestEvent {
 func TestProduceMessage_WhenTopicMappingNotExists_ShouldDoNothing(t *testing.T) {
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
-	eventProducerProps := &properties.EventProducer{TopicMappings: map[string]properties.EventTopic{}}
+	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{}}
 	eventProps := &event.Properties{}
 	listener := NewProduceMessage(producer, appProps, eventProducerProps, eventProps)
 	listener.Handle(webEvent.NewAbstractEvent(context.Background(), "TestEvent"))
@@ -61,7 +61,7 @@ func TestProduceMessage_WhenTopicMappingNotExists_ShouldDoNothing(t *testing.T) 
 func TestProduceMessage_WhenEventTopicIsDisabled_ShouldDoNothing(t *testing.T) {
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
-	eventProducerProps := &properties.EventProducer{TopicMappings: map[string]properties.EventTopic{
+	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{
 		"TestEvent": {
 			TopicName:     "test.topic",
 			Transactional: false,
@@ -77,7 +77,7 @@ func TestProduceMessage_WhenEventTopicIsDisabled_ShouldDoNothing(t *testing.T) {
 func TestProduceMessage_WhenEventTopicNameIsEmpty_ShouldDoNothing(t *testing.T) {
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
-	eventProducerProps := &properties.EventProducer{TopicMappings: map[string]properties.EventTopic{
+	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{
 		"TestEvent": {TopicName: ""},
 	}}
 	eventProps := &event.Properties{}
@@ -89,7 +89,7 @@ func TestProduceMessage_WhenEventTopicNameIsEmpty_ShouldDoNothing(t *testing.T) 
 func TestProduceMessage_WhenIsApplicationEvent_ShouldSendMessageWithCorrectMessageAndHeaders(t *testing.T) {
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
-	eventProducerProps := &properties.EventProducer{TopicMappings: map[string]properties.EventTopic{
+	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{
 		"testapplicationevent": {TopicName: "test.application.topic"},
 	}}
 	eventProps := &event.Properties{}
@@ -120,7 +120,7 @@ func TestProduceMessage_WhenIsApplicationEvent_ShouldSendMessageWithCorrectMessa
 func TestProduceMessage_WhenIsWebEvent_ShouldSendMessageWithCorrectMessageAndHeaders(t *testing.T) {
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
-	eventProducerProps := &properties.EventProducer{TopicMappings: map[string]properties.EventTopic{
+	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{
 		"testevent": {TopicName: "test.topic"},
 	}}
 	eventProps := &event.Properties{}
@@ -175,7 +175,7 @@ func TestProduceMessage_WhenIsWebEvent_ShouldSendMessageWithCorrectMessageAndHea
 func TestProduceMessage_WhenIsWebEventAndNotLogPayload_ShouldSuccess(t *testing.T) {
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
-	eventProducerProps := &properties.EventProducer{TopicMappings: map[string]properties.EventTopic{
+	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{
 		"testevent": {TopicName: "test.topic"},
 	}}
 	eventProps := &event.Properties{

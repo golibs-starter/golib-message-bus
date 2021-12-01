@@ -52,7 +52,7 @@ func (p ProduceMessage) Handle(event pubsub.Event) {
 		webAbsEvent = we.GetAbstractEvent()
 		webAbsEvent.ServiceCode = p.appProps.Name
 	}
-	eventTopic, exists := p.eventProducerProps.TopicMappings[lcEvent]
+	eventTopic, exists := p.eventProducerProps.EventMappings[lcEvent]
 	if !exists {
 		webLog.Debuge(event, "Produce Kafka message is skip, no mapping found for event [%s]", event.Name())
 		return
