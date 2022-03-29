@@ -307,6 +307,8 @@ github.com/zenthangplus/defaults v1.6.2-beta h1:2QDyud3qVvnfi/g0U3ub3EB0PI9H+D7o
 github.com/zenthangplus/defaults v1.6.2-beta/go.mod h1:WUOsmf5WcbZo/HrGwmDrpXcM9AF5ugQ4TUkijs8MQZs=
 gitlab.com/golibs-starter/golib v0.9.11-beta h1:sXdklUP3Clp+xkUSMQPydZWxBZ7gAI+K+TFJqpJR+Kw=
 gitlab.com/golibs-starter/golib v0.9.11-beta/go.mod h1:0eyqugP1eBL70FkPNSXn4R8k6tdDE/jKcvtSoSlzS8M=
+gitlab.com/golibs-starter/golib v0.10.0-beta h1:Js1pfvQ7P6pg/y8CHRjwisto0SpQye/30FieRy0nJfM=
+gitlab.com/golibs-starter/golib v0.10.0-beta/go.mod h1:0eyqugP1eBL70FkPNSXn4R8k6tdDE/jKcvtSoSlzS8M=
 go.etcd.io/etcd/api/v3 v3.5.0/go.mod h1:cbVKeC6lCfl7j/8jBhAK6aIYO9XOjdptoxU/nLQcPvs=
 go.etcd.io/etcd/client/pkg/v3 v3.5.0/go.mod h1:IJHfcCEKxYu1Os13ZdwCwIUTUVGYTSAM3YSwc9/Ac1g=
 go.etcd.io/etcd/client/v2 v2.305.0/go.mod h1:h9puh54ZTgAKtEbut2oe9P4L/oqKCVB6xsXlzd7alYQ=
