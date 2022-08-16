@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	kafkaConstant "gitlab.com/golibs-starter/golib-message-bus/kafka/constant"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
+	"gitlab.com/golibs-starter/golib-message-bus/kafka/log"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
 	"gitlab.com/golibs-starter/golib/config"
 	"gitlab.com/golibs-starter/golib/event"
@@ -15,7 +16,7 @@ import (
 )
 
 type ProduceMessage struct {
-	producer               core.AsyncProducer
+	producer               core.SyncProducer
 	appProps               *config.AppProperties
 	eventProducerProps     *properties.EventProducer
 	eventProps             *event.Properties
@@ -23,7 +24,7 @@ type ProduceMessage struct {
 }
 
 func NewProduceMessage(
-	producer core.AsyncProducer,
+	producer core.SyncProducer,
 	appProps *config.AppProperties,
 	eventProducerProps *properties.EventProducer,
 	eventProps *event.Properties,
@@ -92,7 +93,13 @@ func (p ProduceMessage) Handle(event pubsub.Event) {
 		message.Headers = p.appendMsgHeaders(message.Headers, webAbsEvent)
 		message.Metadata = p.appendMsgMetadata(message.Metadata.(map[string]interface{}), webAbsEvent)
 	}
-	p.producer.Send(&message)
+	if _, _, err = p.producer.Send(&message); err != nil {
+		log.Error(&message, "Exception while producing kafka message %s. Error [%s]",
+			log.DescMessage(&message, p.eventProps.Log.NotLogPayloadForEvents), err)
+		return
+	}
+	log.Info(&message, "Success to produce kafka message %s",
+		log.DescMessage(&message, p.eventProps.Log.NotLogPayloadForEvents))
 }
 
 func (p ProduceMessage) appendMsgHeaders(headers []core.MessageHeader, event *webEvent.AbstractEvent) []core.MessageHeader {

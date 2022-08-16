@@ -27,11 +27,13 @@ func KafkaAdminOpt() fx.Option {
 
 func KafkaProducerOpt() fx.Option {
 	return fx.Options(
-		fx.Provide(impl.NewSaramaProducer),
+		fx.Provide(impl.NewSaramaProducerClient),
+		fx.Provide(impl.NewSaramaSyncProducer),
+		fx.Provide(impl.NewSaramaAsyncProducer),
 		golib.ProvideProps(properties.NewEventProducer),
 		golib.ProvideEventListener(listener.NewProduceMessage),
-		fx.Invoke(handler.ProducerErrorLogHandler),
-		fx.Invoke(handler.ProducerSuccessLogHandler),
+		fx.Invoke(handler.AsyncProducerErrorLogHandler),
+		fx.Invoke(handler.AsyncProducerSuccessLogHandler),
 	)
 }
 

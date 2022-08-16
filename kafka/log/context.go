@@ -1,4 +1,4 @@
-package handler
+package log
 
 import (
 	kafkaConstant "gitlab.com/golibs-starter/golib-message-bus/kafka/constant"

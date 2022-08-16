@@ -45,3 +45,20 @@ func (p SaramaMapper) toCoreHeader(header *sarama.RecordHeader) core.MessageHead
 		Value: header.Value,
 	}
 }
+
+func (p SaramaMapper) ToCoreMessage(msg *sarama.ProducerMessage) *core.Message {
+	var key, value []byte
+	if msg.Key != nil {
+		key, _ = msg.Key.Encode()
+	}
+	if msg.Value != nil {
+		value, _ = msg.Value.Encode()
+	}
+	return &core.Message{
+		Topic:    msg.Topic,
+		Key:      key,
+		Value:    value,
+		Headers:  p.ToCoreHeaders(msg.Headers),
+		Metadata: msg.Metadata,
+	}
+}

@@ -10,6 +10,10 @@ type MessageHeader struct {
 	Value []byte
 }
 
+func (m MessageHeader) String() string {
+	return fmt.Sprintf("[%s: %s]", string(m.Key), string(m.Value))
+}
+
 type Message struct {
 	Topic    string
 	Key      []byte
@@ -18,8 +22,9 @@ type Message struct {
 	Metadata interface{}
 }
 
-func (m MessageHeader) String() string {
-	return fmt.Sprintf("[Key: %s, Value: %s]", string(m.Key), string(m.Value))
+func (m Message) String() string {
+	return fmt.Sprintf("[Topic: %s, Key: %s, Headers: %s, Payload: %s]",
+		m.Topic, string(m.Key), m.Headers, string(m.Value))
 }
 
 type ConsumerMessage struct {
