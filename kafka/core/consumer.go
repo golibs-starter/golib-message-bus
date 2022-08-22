@@ -4,6 +4,7 @@ import "context"
 
 type Consumer interface {
 	Start(ctx context.Context)
+	Stop()
 }
 
 type ConsumerHandler interface {
