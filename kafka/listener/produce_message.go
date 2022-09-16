@@ -94,11 +94,11 @@ func (p ProduceMessage) Handle(event pubsub.Event) {
 		message.Metadata = p.appendMsgMetadata(message.Metadata.(map[string]interface{}), webAbsEvent)
 	}
 	if _, _, err = p.producer.Send(&message); err != nil {
-		log.Error(&message, "Exception while producing kafka message %s. Error [%s]",
+		webLog.Errore(event, "Exception while producing kafka message %s. Error [%s]",
 			log.DescMessage(&message, p.eventProps.Log.NotLogPayloadForEvents), err)
 		return
 	}
-	log.Info(&message, "Success to produce kafka message %s",
+	webLog.Infoe(event, "Success to produce kafka message %s",
 		log.DescMessage(&message, p.eventProps.Log.NotLogPayloadForEvents))
 }
 

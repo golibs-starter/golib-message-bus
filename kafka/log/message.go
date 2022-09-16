@@ -4,28 +4,8 @@ import (
 	"fmt"
 	kafkaConstant "gitlab.com/golibs-starter/golib-message-bus/kafka/constant"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
-	"gitlab.com/golibs-starter/golib/web/constant"
-	"gitlab.com/golibs-starter/golib/web/log"
 	"strings"
 )
-
-func Info(msg *core.Message, messageFormat string, args ...interface{}) {
-	if metadata, ok := msg.Metadata.(map[string]interface{}); ok {
-		logContext := []interface{}{constant.ContextReqMeta, getLoggingContext(metadata)}
-		log.Infow(logContext, messageFormat, args...)
-	} else {
-		log.Infof(messageFormat, args...)
-	}
-}
-
-func Error(msg *core.Message, messageFormat string, args ...interface{}) {
-	if metadata, ok := msg.Metadata.(map[string]interface{}); ok {
-		logContext := []interface{}{constant.ContextReqMeta, getLoggingContext(metadata)}
-		log.Errorw(logContext, messageFormat, args...)
-	} else {
-		log.Errorf(messageFormat, args...)
-	}
-}
 
 func DescMessage(msg *core.Message, notLogPayloadForEvents []string) string {
 	notLogPayloadForEventsMap := make(map[string]bool)

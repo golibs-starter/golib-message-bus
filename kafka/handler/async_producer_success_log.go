@@ -4,13 +4,19 @@ import (
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/log"
 	"gitlab.com/golibs-starter/golib/event"
+	coreLog "gitlab.com/golibs-starter/golib/log"
 )
 
 func AsyncProducerSuccessLogHandler(producer core.AsyncProducer, eventProps *event.Properties) {
 	go func() {
+		messageFormat := "Success to produce kafka message %s"
 		for msg := range producer.Successes() {
-			log.Info(msg, "Success to produce kafka message %s",
-				log.DescMessage(msg, eventProps.Log.NotLogPayloadForEvents))
+			descMessage := log.DescMessage(msg, eventProps.Log.NotLogPayloadForEvents)
+			if metadata, ok := msg.Metadata.(map[string]interface{}); ok {
+				coreLog.Infow(log.GetLoggingContext(metadata), messageFormat, descMessage)
+			} else {
+				coreLog.Infof(messageFormat, descMessage)
+			}
 		}
 	}()
 }
