@@ -5,7 +5,7 @@ import (
 	"github.com/pkg/errors"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/utils"
+	coreUtils "gitlab.com/golibs-starter/golib/utils"
 	"strings"
 )
 
@@ -28,7 +28,7 @@ func NewSaramaConsumers(
 
 	handlerMap := make(map[string]core.ConsumerHandler)
 	for _, handler := range handlers {
-		handlerMap[strings.ToLower(utils.GetStructName(handler))] = handler
+		handlerMap[strings.ToLower(coreUtils.GetStructShortName(handler))] = handler
 	}
 
 	kafkaConsumers := SaramaConsumers{
@@ -50,11 +50,11 @@ func (s *SaramaConsumers) init(handlerMap map[string]core.ConsumerHandler) error
 		if !config.Enable {
 			continue
 		}
-		handler, exists := handlerMap[strings.ToLower(key)]
+		key = strings.ToLower(strings.TrimSpace(key))
+		handler, exists := handlerMap[key]
 		if !exists {
 			continue
 		}
-		key = strings.TrimSpace(key)
 		config.Topic = strings.TrimSpace(config.Topic)
 		config.GroupId = strings.TrimSpace(config.GroupId)
 		saramaConsumer, err := NewSaramaConsumer(s.props, s.mapper, &config, handler)

@@ -8,6 +8,7 @@ import (
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/utils"
+	coreUtils "gitlab.com/golibs-starter/golib/utils"
 	"gitlab.com/golibs-starter/golib/web/log"
 )
 
@@ -80,7 +81,7 @@ func NewSaramaConsumer(
 
 func (c *SaramaConsumer) Start(ctx context.Context) {
 	topics := []string{c.topic}
-	consumerName := utils.GetStructName(c.handler)
+	consumerName := coreUtils.GetStructShortName(c.handler)
 	log.Infof("Consumer [%s] with topic [%v] is starting", consumerName, topics)
 
 	// Track errors
