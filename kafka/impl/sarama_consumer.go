@@ -4,10 +4,8 @@ import (
 	"context"
 	"github.com/Shopify/sarama"
 	"github.com/pkg/errors"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/constant"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/utils"
 	coreUtils "gitlab.com/golibs-starter/golib/utils"
 	"gitlab.com/golibs-starter/golib/web/log"
 )
@@ -22,49 +20,11 @@ type SaramaConsumer struct {
 }
 
 func NewSaramaConsumer(
-	props *properties.Consumer,
+	client sarama.Client,
 	mapper *SaramaMapper,
 	topicConsumer *properties.TopicConsumer,
 	handler core.ConsumerHandler,
 ) (*SaramaConsumer, error) {
-	config := sarama.NewConfig()
-	if props.ClientId != "" {
-		config.ClientID = props.ClientId
-	}
-	config.Version = sarama.V1_0_0_0
-	config.Consumer.Return.Errors = true
-
-	if props.SecurityProtocol == core.SecurityProtocolTls {
-		if props.Tls == nil {
-			return nil, errors.New("Tls config not found when using SecurityProtocol=TLS")
-		}
-		tlsConfig, err := utils.NewTLSConfig(
-			props.Tls.CertFileLocation,
-			props.Tls.KeyFileLocation,
-			props.Tls.CaFileLocation,
-		)
-		if err != nil {
-			return nil, errors.WithMessage(err, "Error when load TLS config")
-		}
-		tlsConfig.InsecureSkipVerify = props.Tls.InsecureSkipVerify
-		config.Net.TLS.Enable = true
-		config.Net.TLS.Config = tlsConfig
-	}
-
-	switch props.InitialOffset {
-	case constant.InitialOffsetNewest:
-		config.Consumer.Offsets.Initial = sarama.OffsetNewest
-	case constant.InitialOffsetOldest:
-		config.Consumer.Offsets.Initial = sarama.OffsetOldest
-	default:
-		config.Consumer.Offsets.Initial = props.InitialOffset
-	}
-
-	client, err := sarama.NewClient(props.BootstrapServers, config)
-	if err != nil {
-		return nil, errors.WithMessage(err, "Error when create sarama consumer client")
-	}
-
 	consumerGroup, err := sarama.NewConsumerGroupFromClient(topicConsumer.GroupId, client)
 	if err != nil {
 		return nil, errors.WithMessage(err, "Error when create sarama consumer group")

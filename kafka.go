@@ -1,6 +1,7 @@
 package golibmsg
 
 import (
+	"github.com/Shopify/sarama"
 	"gitlab.com/golibs-starter/golib"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/handler"
@@ -27,9 +28,18 @@ func KafkaAdminOpt() fx.Option {
 
 func KafkaProducerOpt() fx.Option {
 	return fx.Options(
-		fx.Provide(impl.NewSaramaProducerClient),
-		fx.Provide(impl.NewSaramaSyncProducer),
-		fx.Provide(impl.NewSaramaAsyncProducer),
+		fx.Provide(fx.Annotated{
+			Name:   "sarama_producer_client",
+			Target: impl.NewSaramaProducerClient,
+		}),
+		fx.Provide(fx.Annotate(
+			impl.NewSaramaSyncProducer,
+			fx.ParamTags(`name:"sarama_producer_client"`),
+		)),
+		fx.Provide(fx.Annotate(
+			impl.NewSaramaAsyncProducer,
+			fx.ParamTags(`name:"sarama_producer_client"`),
+		)),
 		golib.ProvideProps(properties.NewEventProducer),
 		golib.ProvideEventListener(listener.NewProduceMessage),
 		fx.Invoke(handler.AsyncProducerErrorLogHandler),
@@ -40,6 +50,10 @@ func KafkaProducerOpt() fx.Option {
 func KafkaConsumerOpt() fx.Option {
 	return fx.Options(
 		golib.ProvideProps(properties.NewKafkaConsumer),
+		fx.Provide(fx.Annotated{
+			Name:   "sarama_consumer_client",
+			Target: impl.NewSaramaConsumerClient,
+		}),
 		fx.Provide(NewSaramaConsumers),
 		fx.Invoke(handler.StartConsumers),
 	)
@@ -47,6 +61,7 @@ func KafkaConsumerOpt() fx.Option {
 
 type NewKafkaConsumersIn struct {
 	fx.In
+	Client             sarama.Client `name:"sarama_consumer_client"`
 	Props              *properties.Client
 	KafkaConsumerProps *properties.KafkaConsumer
 	Mapper             *impl.SaramaMapper
@@ -54,7 +69,7 @@ type NewKafkaConsumersIn struct {
 }
 
 func NewSaramaConsumers(in NewKafkaConsumersIn) (core.Consumer, error) {
-	return impl.NewSaramaConsumers(in.Props, in.KafkaConsumerProps, in.Mapper, in.Handlers)
+	return impl.NewSaramaConsumers(in.Client, in.Props, in.KafkaConsumerProps, in.Mapper, in.Handlers)
 }
 
 func ProvideConsumer(handler interface{}) fx.Option {

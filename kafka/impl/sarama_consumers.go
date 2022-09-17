@@ -2,6 +2,7 @@ package impl
 
 import (
 	"context"
+	"github.com/Shopify/sarama"
 	"github.com/pkg/errors"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
@@ -10,6 +11,7 @@ import (
 )
 
 type SaramaConsumers struct {
+	client             sarama.Client
 	props              *properties.Consumer
 	kafkaConsumerProps *properties.KafkaConsumer
 	mapper             *SaramaMapper
@@ -17,13 +19,14 @@ type SaramaConsumers struct {
 }
 
 func NewSaramaConsumers(
+	client sarama.Client,
 	props *properties.Client,
 	kafkaConsumerProps *properties.KafkaConsumer,
 	mapper *SaramaMapper,
 	handlers []core.ConsumerHandler,
 ) (core.Consumer, error) {
 	if len(kafkaConsumerProps.HandlerMappings) < 1 {
-		return nil, errors.New("[SaramaConsumers] Missing handler config")
+		return nil, errors.New("[SaramaConsumers] Missing handler mapping")
 	}
 
 	handlerMap := make(map[string]core.ConsumerHandler)
@@ -32,6 +35,7 @@ func NewSaramaConsumers(
 	}
 
 	kafkaConsumers := SaramaConsumers{
+		client:             client,
 		props:              &props.Consumer,
 		kafkaConsumerProps: kafkaConsumerProps,
 		mapper:             mapper,
@@ -39,7 +43,7 @@ func NewSaramaConsumers(
 	}
 
 	if err := kafkaConsumers.init(handlerMap); err != nil {
-		return nil, errors.WithMessage(err, "[SaramaConsumers] Error when create kafka consumers")
+		return nil, errors.WithMessage(err, "[SaramaConsumers] Error when init kafka consumers")
 	}
 
 	return &kafkaConsumers, nil
@@ -57,7 +61,7 @@ func (s *SaramaConsumers) init(handlerMap map[string]core.ConsumerHandler) error
 		}
 		config.Topic = strings.TrimSpace(config.Topic)
 		config.GroupId = strings.TrimSpace(config.GroupId)
-		saramaConsumer, err := NewSaramaConsumer(s.props, s.mapper, &config, handler)
+		saramaConsumer, err := NewSaramaConsumer(s.client, s.mapper, &config, handler)
 		if err != nil {
 			return err
 		}
