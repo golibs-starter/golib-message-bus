@@ -93,13 +93,14 @@ func (p ProduceMessage) Handle(event pubsub.Event) {
 		message.Headers = p.appendMsgHeaders(message.Headers, webAbsEvent)
 		message.Metadata = p.appendMsgMetadata(message.Metadata.(map[string]interface{}), webAbsEvent)
 	}
-	if _, _, err = p.producer.Send(&message); err != nil {
+	partition, offset, err := p.producer.Send(&message)
+	if err != nil {
 		webLog.Errore(event, "Exception while producing kafka message %s. Error [%s]",
 			log.DescMessage(&message, p.eventProps.Log.NotLogPayloadForEvents), err)
 		return
 	}
-	webLog.Infoe(event, "Success to produce kafka message %s",
-		log.DescMessage(&message, p.eventProps.Log.NotLogPayloadForEvents))
+	webLog.Infoe(event, "Success to produce to kafka partition [%d], offset [%d], message %s",
+		partition, offset, log.DescMessage(&message, p.eventProps.Log.NotLogPayloadForEvents))
 }
 
 func (p ProduceMessage) appendMsgHeaders(headers []core.MessageHeader, event *webEvent.AbstractEvent) []core.MessageHeader {
