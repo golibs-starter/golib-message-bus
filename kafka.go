@@ -46,6 +46,21 @@ func KafkaProducerOpt() fx.Option {
 		golib.ProvideEventListener(listener.NewProduceMessage),
 		fx.Invoke(handler.AsyncProducerErrorLogHandler),
 		fx.Invoke(handler.AsyncProducerSuccessLogHandler),
+		fx.Invoke(func(lc fx.Lifecycle, syncProducer core.SyncProducer, asyncProducer core.AsyncProducer) {
+			lc.Append(fx.Hook{
+				OnStop: func(ctx context.Context) error {
+					log.Infof("Receive stop signal for kafka producers")
+					if err := syncProducer.Close(); err != nil {
+						log.Errorf("Cannot kafka sync producer. Error [%s]", err)
+					}
+					err := asyncProducer.Close()
+					if err != nil {
+						log.Errorf("Cannot kafka async producer. Error [%s]", err)
+					}
+					return nil
+				},
+			})
+		}),
 	)
 }
 

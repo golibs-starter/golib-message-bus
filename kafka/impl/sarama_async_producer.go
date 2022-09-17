@@ -4,6 +4,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/pkg/errors"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
+	"gitlab.com/golibs-starter/golib/log"
 )
 
 type SaramaAsyncProducer struct {
@@ -61,6 +62,8 @@ func (p *SaramaAsyncProducer) Errors() <-chan *core.ProducerError {
 	return p.errorsCh
 }
 
-func (p *SaramaAsyncProducer) Close() {
-	p.producer.AsyncClose()
+func (p *SaramaAsyncProducer) Close() error {
+	log.Info("Kafka async producer is stopping")
+	defer log.Info("Kafka async producer is stopped")
+	return p.producer.Close()
 }

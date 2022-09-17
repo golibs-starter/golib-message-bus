@@ -13,5 +13,5 @@ type AsyncProducer interface {
 	Errors() <-chan *ProducerError
 
 	// Close the producer
-	Close()
+	Close() error
 }

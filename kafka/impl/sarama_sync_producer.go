@@ -4,6 +4,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/pkg/errors"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
+	"gitlab.com/golibs-starter/golib/log"
 )
 
 type SaramaSyncProducer struct {
@@ -39,5 +40,7 @@ func (s SaramaSyncProducer) Send(m *core.Message) (partition int32, offset int64
 }
 
 func (s *SaramaSyncProducer) Close() error {
+	log.Info("Kafka sync producer is stopping")
+	defer log.Info("Kafka sync producer is stopped")
 	return s.producer.Close()
 }
