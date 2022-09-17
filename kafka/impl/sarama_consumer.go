@@ -15,6 +15,7 @@ type SaramaConsumer struct {
 	consumerGroup sarama.ConsumerGroup
 	mapper        *SaramaMapper
 	topic         string
+	name          string
 	handler       core.ConsumerHandler
 	running       bool
 }
@@ -33,6 +34,7 @@ func NewSaramaConsumer(
 	return &SaramaConsumer{
 		client:        client,
 		mapper:        mapper,
+		name:          coreUtils.GetStructShortName(handler),
 		handler:       handler,
 		topic:         topicConsumer.Topic,
 		consumerGroup: consumerGroup,
@@ -41,35 +43,37 @@ func NewSaramaConsumer(
 
 func (c *SaramaConsumer) Start(ctx context.Context) {
 	topics := []string{c.topic}
-	consumerName := coreUtils.GetStructShortName(c.handler)
-	log.Infof("Consumer [%s] with topic [%v] is starting", consumerName, topics)
+	log.Infof("Consumer [%s] with topic [%v] is starting", c.name, topics)
 
 	// Track errors
 	go func() {
 		for err := range c.consumerGroup.Errors() {
-			log.Errorf("ConsumerGroup error for consumer [%s], detail: [%v]", consumerName, err)
+			log.Errorf("ConsumerGroup error for consumer [%s], detail: [%v]", c.name, err)
 		}
 	}()
 
 	// Iterate over consumers sessions.
 	c.running = true
 	for c.running {
-		log.Infof("Consumer [%s] with topic [%v] is running", consumerName, topics)
+		log.Infof("Consumer [%s] with topic [%v] is running", c.name, topics)
 		handler := NewConsumerGroupHandler(c.handler.HandlerFunc, c.mapper)
 		if err := c.consumerGroup.Consume(ctx, topics, handler); err != nil {
 			if !c.running {
-				log.Infof("Consumer [%s] with topic [%v] is closed, err [%s]", consumerName, topics, err)
+				log.Infof("Consumer [%s] with topic [%v] is closed, err [%s]", c.name, topics, err)
 			} else {
 				log.Errorf("Error when consume message in topics [%v] for consumer [%s], detail [%v]",
-					topics, consumerName, err)
+					topics, c.name, err)
 			}
 		}
 	}
-	log.Infof("Consumer [%s] with topic [%v] is closed", consumerName, topics)
+	log.Infof("Consumer [%s] with topic [%v] is closed", c.name, topics)
 }
 
 func (c *SaramaConsumer) Close() {
 	c.running = false
-	c.consumerGroup.Close()
+	log.Debugf("Close kafka consumer [%s]", c.name)
+	if err := c.consumerGroup.Close(); err != nil {
+		log.Errorf("Cannot close kafka consumer [%s], err [%v]", c.name, err)
+	}
 	c.handler.Close()
 }

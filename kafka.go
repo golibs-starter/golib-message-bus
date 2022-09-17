@@ -1,6 +1,7 @@
 package golibmsg
 
 import (
+	"context"
 	"github.com/Shopify/sarama"
 	"gitlab.com/golibs-starter/golib"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
@@ -8,6 +9,7 @@ import (
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/impl"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/listener"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
+	"gitlab.com/golibs-starter/golib/log"
 	"go.uber.org/fx"
 )
 
@@ -56,6 +58,15 @@ func KafkaConsumerOpt() fx.Option {
 		}),
 		fx.Provide(NewSaramaConsumers),
 		fx.Invoke(handler.StartConsumers),
+		fx.Invoke(func(lc fx.Lifecycle, consumer core.Consumer) {
+			lc.Append(fx.Hook{
+				OnStop: func(ctx context.Context) error {
+					log.Infof("Stop kafka consumer")
+					consumer.Close()
+					return nil
+				},
+			})
+		}),
 	)
 }
 
