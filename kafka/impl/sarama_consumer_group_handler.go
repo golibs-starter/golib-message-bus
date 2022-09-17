@@ -3,6 +3,7 @@ package impl
 import (
 	"github.com/Shopify/sarama"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
+	"gitlab.com/golibs-starter/golib/web/log"
 )
 
 type ConsumerGroupHandler struct {
@@ -24,16 +25,22 @@ func (ConsumerGroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error {
 
 func (cg ConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for msg := range claim.Messages() {
-		cg.handleFunc(&core.ConsumerMessage{
-			Key:       msg.Key,
-			Value:     msg.Value,
-			Topic:     msg.Topic,
-			Headers:   cg.mapper.PtrToCoreHeaders(msg.Headers),
-			Partition: msg.Partition,
-			Offset:    msg.Offset,
-			Timestamp: msg.Timestamp,
-		})
-		sess.MarkMessage(msg, "")
+		select {
+		case <-sess.Context().Done():
+			log.Infof("Gracefully shutdown. Stopped taking new messages.")
+			return nil
+		default:
+			cg.handleFunc(&core.ConsumerMessage{
+				Key:       msg.Key,
+				Value:     msg.Value,
+				Topic:     msg.Topic,
+				Headers:   cg.mapper.PtrToCoreHeaders(msg.Headers),
+				Partition: msg.Partition,
+				Offset:    msg.Offset,
+				Timestamp: msg.Timestamp,
+			})
+			sess.MarkMessage(msg, "")
+		}
 	}
 	return nil
 }

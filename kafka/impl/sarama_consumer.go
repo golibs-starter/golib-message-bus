@@ -17,7 +17,6 @@ type SaramaConsumer struct {
 	topic         string
 	name          string
 	handler       core.ConsumerHandler
-	running       bool
 }
 
 func NewSaramaConsumer(
@@ -53,27 +52,20 @@ func (c *SaramaConsumer) Start(ctx context.Context) {
 	}()
 
 	// Iterate over consumers sessions.
-	c.running = true
-	for c.running {
-		log.Infof("Consumer [%s] with topic [%v] is running", c.name, topics)
-		handler := NewConsumerGroupHandler(c.handler.HandlerFunc, c.mapper)
-		if err := c.consumerGroup.Consume(ctx, topics, handler); err != nil {
-			if !c.running {
-				log.Infof("Consumer [%s] with topic [%v] is closed, err [%s]", c.name, topics, err)
-			} else {
-				log.Errorf("Error when consume message in topics [%v] for consumer [%s], detail [%v]",
-					topics, c.name, err)
-			}
-		}
+	log.Infof("Consumer [%s] with topic [%v] is running", consumerName, topics)
+	handler := NewConsumerGroupHandler(c.handler.HandlerFunc, c.mapper)
+	if err := c.consumerGroup.Consume(ctx, topics, handler); err != nil {
+		log.Errorf("Error when consume message in topics [%v] for consumer [%s], detail [%v]", topics, consumerName, err)
 	}
 	log.Infof("Consumer [%s] with topic [%v] is closed", c.name, topics)
 }
 
 func (c *SaramaConsumer) Close() {
-	c.running = false
-	log.Debugf("Close kafka consumer [%s]", c.name)
+	consumerName := utils.GetStructName(c.handler)
+	log.Infof("Consumer %s is stopping", consumerName)
+	defer log.Infof("Consumer %s stopped", consumerName)
 	if err := c.consumerGroup.Close(); err != nil {
-		log.Errorf("Cannot close kafka consumer [%s], err [%v]", c.name, err)
+		log.Errorf("Consumer %v could not stop: %v", consumerName, err)
 	}
 	c.handler.Close()
 }
