@@ -5,7 +5,6 @@ import (
 	"github.com/pkg/errors"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/constant"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
-	"time"
 )
 
 func NewSaramaConsumerClient(globalProps *properties.Client) (sarama.Client, error) {
@@ -13,8 +12,6 @@ func NewSaramaConsumerClient(globalProps *properties.Client) (sarama.Client, err
 	if err != nil {
 		return nil, errors.WithMessage(err, "Create sarama config error")
 	}
-	config.Consumer.Return.Errors = true
-	config.Consumer.Group.Heartbeat.Interval = 10 * time.Millisecond
 	props := globalProps.Consumer
 	switch props.InitialOffset {
 	case constant.InitialOffsetNewest:
@@ -24,6 +21,8 @@ func NewSaramaConsumerClient(globalProps *properties.Client) (sarama.Client, err
 	default:
 		config.Consumer.Offsets.Initial = props.InitialOffset
 	}
+	config.Consumer.Return.Errors = true
+	config.Consumer.Offsets.AutoCommit.Enable = true
 
 	client, err := sarama.NewClient(props.BootstrapServers, config)
 	if err != nil {
