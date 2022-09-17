@@ -7,6 +7,7 @@ import (
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/utils"
 	"strings"
+	"sync"
 )
 
 type SaramaConsumers struct {
@@ -68,12 +69,20 @@ func (s *SaramaConsumers) init(handlerMap map[string]core.ConsumerHandler) error
 
 func (s *SaramaConsumers) Start(ctx context.Context) {
 	for _, consumer := range s.consumers {
-		go consumer.Start(ctx)
+		go func(consumer *SaramaConsumer) {
+			consumer.Start(ctx)
+		}(consumer)
 	}
 }
 
-func (s *SaramaConsumers) Close() {
+func (s *SaramaConsumers) Stop() {
+	var wg sync.WaitGroup
+	wg.Add(len(s.consumers))
 	for _, consumer := range s.consumers {
-		go consumer.Close()
+		go func(consumer *SaramaConsumer) {
+			defer wg.Done()
+			consumer.Close()
+		}(consumer)
 	}
+	wg.Wait()
 }
