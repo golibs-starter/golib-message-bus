@@ -55,8 +55,13 @@ func (c *SaramaConsumer) Start(ctx context.Context) {
 	log.Infof("Consumer [%s] with topic [%v] is running", c.name, topics)
 	handler := NewConsumerGroupHandler(c.handler.HandlerFunc, c.mapper)
 	if err := c.consumerGroup.Consume(ctx, topics, handler); err != nil {
-		log.Errorf("Error when consume message in topics [%v] for consumer [%s], detail [%v]",
-			topics, c.name, err)
+		if err == sarama.ErrClosedConsumerGroup {
+			log.Infof("Consume group [%s] is closed when consume topics [%v], detail [%s]",
+				c.name, topics, err.Error())
+		} else {
+			log.Errorf("Error when consume message in topics [%v] for consumer [%s], detail [%v]",
+				topics, c.name, err)
+		}
 	}
 	log.Infof("Consumer [%s] with topic [%v] is closed", c.name, topics)
 }

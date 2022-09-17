@@ -95,7 +95,7 @@ func (p ProduceMessage) Handle(event pubsub.Event) {
 	}
 	partition, offset, err := p.producer.Send(&message)
 	if err != nil {
-		webLog.Errore(event, "Exception while producing kafka message %s. Error [%s]",
+		webLog.Errore(event, "Error while producing kafka message %s. Error [%s]",
 			log.DescMessage(&message, p.eventProps.Log.NotLogPayloadForEvents), err)
 		return
 	}

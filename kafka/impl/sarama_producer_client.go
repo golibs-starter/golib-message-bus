@@ -17,5 +17,9 @@ func NewSaramaProducerClient(globalProps *properties.Client) (sarama.Client, err
 	config.Producer.Flush.Frequency = props.FlushFrequency
 	config.Producer.Return.Successes = true
 	config.Producer.Return.Errors = true
-	return sarama.NewClient(props.BootstrapServers, config)
+	client, err := sarama.NewClient(props.BootstrapServers, config)
+	if err != nil {
+		return nil, errors.WithMessage(err, "Error when create sarama producer client")
+	}
+	return client, nil
 }
