@@ -52,20 +52,20 @@ func (c *SaramaConsumer) Start(ctx context.Context) {
 	}()
 
 	// Iterate over consumers sessions.
-	log.Infof("Consumer [%s] with topic [%v] is running", consumerName, topics)
+	log.Infof("Consumer [%s] with topic [%v] is running", c.name, topics)
 	handler := NewConsumerGroupHandler(c.handler.HandlerFunc, c.mapper)
 	if err := c.consumerGroup.Consume(ctx, topics, handler); err != nil {
-		log.Errorf("Error when consume message in topics [%v] for consumer [%s], detail [%v]", topics, consumerName, err)
+		log.Errorf("Error when consume message in topics [%v] for consumer [%s], detail [%v]",
+			topics, c.name, err)
 	}
 	log.Infof("Consumer [%s] with topic [%v] is closed", c.name, topics)
 }
 
 func (c *SaramaConsumer) Close() {
-	consumerName := utils.GetStructName(c.handler)
-	log.Infof("Consumer %s is stopping", consumerName)
-	defer log.Infof("Consumer %s stopped", consumerName)
+	log.Infof("Consumer [%s] is stopping", c.name)
+	defer log.Infof("Consumer [%s] stopped", c.name)
 	if err := c.consumerGroup.Close(); err != nil {
-		log.Errorf("Consumer %v could not stop: %v", consumerName, err)
+		log.Errorf("Consumer [%s] could not stop. Error [%v]", c.name, err)
 	}
 	c.handler.Close()
 }

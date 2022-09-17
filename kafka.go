@@ -61,8 +61,8 @@ func KafkaConsumerOpt() fx.Option {
 		fx.Invoke(func(lc fx.Lifecycle, consumer core.Consumer) {
 			lc.Append(fx.Hook{
 				OnStop: func(ctx context.Context) error {
-					log.Infof("Stop kafka consumer")
-					consumer.Close()
+					log.Infof("Receive stop signal for kafka consumers")
+					consumer.Stop()
 					return nil
 				},
 			})
@@ -70,17 +70,17 @@ func KafkaConsumerOpt() fx.Option {
 	)
 }
 
-type NewKafkaConsumersIn struct {
+type KafkaConsumersIn struct {
 	fx.In
-	Client             sarama.Client `name:"sarama_consumer_client"`
-	Props              *properties.Client
-	KafkaConsumerProps *properties.KafkaConsumer
-	Mapper             *impl.SaramaMapper
-	Handlers           []core.ConsumerHandler `group:"kafka_consumer_handler"`
+	Client        sarama.Client `name:"sarama_consumer_client"`
+	GlobalProps   *properties.Client
+	ConsumerProps *properties.KafkaConsumer
+	SaramaMapper  *impl.SaramaMapper
+	Handlers      []core.ConsumerHandler `group:"kafka_consumer_handler"`
 }
 
-func NewSaramaConsumers(in NewKafkaConsumersIn) (core.Consumer, error) {
-	return impl.NewSaramaConsumers(in.Client, in.Props, in.KafkaConsumerProps, in.Mapper, in.Handlers)
+func NewSaramaConsumers(in KafkaConsumersIn) (core.Consumer, error) {
+	return impl.NewSaramaConsumers(in.Client, in.GlobalProps, in.ConsumerProps, in.SaramaMapper, in.Handlers)
 }
 
 func ProvideConsumer(handler interface{}) fx.Option {
