@@ -27,18 +27,10 @@ func (cg ConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, cl
 	for msg := range claim.Messages() {
 		select {
 		case <-sess.Context().Done():
-			log.Infof("Gracefully shutdown. Stopped taking new messages.")
+			log.Infof("Consumer session closed, stop taking new messages")
 			return nil
 		default:
-			cg.handleFunc(&core.ConsumerMessage{
-				Key:       msg.Key,
-				Value:     msg.Value,
-				Topic:     msg.Topic,
-				Headers:   cg.mapper.PtrToCoreHeaders(msg.Headers),
-				Partition: msg.Partition,
-				Offset:    msg.Offset,
-				Timestamp: msg.Timestamp,
-			})
+			cg.handleFunc(cg.mapper.ToCoreConsumerMessage(msg))
 			sess.MarkMessage(msg, "")
 		}
 	}

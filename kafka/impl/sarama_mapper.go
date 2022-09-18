@@ -78,3 +78,15 @@ func (p SaramaMapper) ToCoreMessage(msg *sarama.ProducerMessage) *core.Message {
 		Timestamp: msg.Timestamp,
 	}
 }
+
+func (p SaramaMapper) ToCoreConsumerMessage(msg *sarama.ConsumerMessage) *core.ConsumerMessage {
+	return &core.ConsumerMessage{
+		Key:       msg.Key,
+		Value:     msg.Value,
+		Topic:     msg.Topic,
+		Headers:   p.PtrToCoreHeaders(msg.Headers),
+		Partition: msg.Partition,
+		Offset:    msg.Offset,
+		Timestamp: msg.Timestamp,
+	}
+}
