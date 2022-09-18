@@ -23,7 +23,9 @@ func NewSaramaConsumerClient(globalProps *properties.Client) (sarama.Client, err
 	}
 	config.Consumer.Return.Errors = true
 	config.Consumer.Offsets.AutoCommit.Enable = true
-
+	if err := config.Validate(); err != nil {
+		return nil, errors.WithMessage(err, "Error when validate consumer client config")
+	}
 	client, err := sarama.NewClient(props.BootstrapServers, config)
 	if err != nil {
 		return nil, errors.WithMessage(err, "Error when create sarama consumer client")
