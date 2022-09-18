@@ -46,21 +46,6 @@ func KafkaProducerOpt() fx.Option {
 		golib.ProvideEventListener(listener.NewProduceMessage),
 		fx.Invoke(handler.AsyncProducerErrorLogHandler),
 		fx.Invoke(handler.AsyncProducerSuccessLogHandler),
-		fx.Invoke(func(lc fx.Lifecycle, syncProducer core.SyncProducer, asyncProducer core.AsyncProducer) {
-			lc.Append(fx.Hook{
-				OnStop: func(ctx context.Context) error {
-					log.Infof("Receive stop signal for kafka producers")
-					if err := syncProducer.Close(); err != nil {
-						log.Errorf("Cannot kafka sync producer. Error [%s]", err)
-					}
-					err := asyncProducer.Close()
-					if err != nil {
-						log.Errorf("Cannot kafka async producer. Error [%s]", err)
-					}
-					return nil
-				},
-			})
-		}),
 	)
 }
 
@@ -73,16 +58,11 @@ func KafkaConsumerOpt() fx.Option {
 		}),
 		fx.Provide(NewSaramaConsumers),
 		fx.Invoke(handler.StartConsumers),
-		fx.Invoke(func(lc fx.Lifecycle, consumer core.Consumer) {
-			lc.Append(fx.Hook{
-				OnStop: func(ctx context.Context) error {
-					log.Infof("Receive stop signal for kafka consumers")
-					consumer.Stop()
-					return nil
-				},
-			})
-		}),
 	)
+}
+
+func KafkaGracefulShutdownOpt() fx.Option {
+	return fx.Invoke(AppendGracefulShutdownBehavior)
 }
 
 type KafkaConsumersIn struct {
@@ -100,4 +80,47 @@ func NewSaramaConsumers(in KafkaConsumersIn) (core.Consumer, error) {
 
 func ProvideConsumer(handler interface{}) fx.Option {
 	return fx.Provide(fx.Annotated{Group: "kafka_consumer_handler", Target: handler})
+}
+
+type KafkaGracefulShutDownIn struct {
+	fx.In
+	Lc             fx.Lifecycle
+	ProducerClient sarama.Client      `name:"sarama_producer_client" optional:"true"`
+	SyncProducer   core.SyncProducer  `optional:"true"`
+	AsyncProducer  core.AsyncProducer `optional:"true"`
+	ConsumerClient sarama.Client      `name:"sarama_consumer_client" optional:"true"`
+	ConsumerGroup  core.Consumer      `optional:"true"`
+}
+
+func AppendGracefulShutdownBehavior(in KafkaGracefulShutDownIn) {
+	in.Lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			log.Infof("Receive stop signal for kafka")
+			if in.SyncProducer != nil {
+				if err := in.SyncProducer.Close(); err != nil {
+					log.Errorf("Cannot close kafka sync producer. Error [%v]", err)
+				}
+			}
+			if in.AsyncProducer != nil {
+				err := in.AsyncProducer.Close()
+				if err != nil {
+					log.Errorf("Cannot close kafka async producer. Error [%v]", err)
+				}
+			}
+			if in.ProducerClient != nil {
+				if err := in.ProducerClient.Close(); err != nil {
+					log.Errorf("Cannot stop kafka producer client. Error [%v]", err)
+				}
+			}
+			if in.ConsumerGroup != nil {
+				in.ConsumerGroup.Stop()
+			}
+			if in.ConsumerClient != nil {
+				if err := in.ConsumerClient.Close(); err != nil {
+					log.Errorf("Cannot stop kafka consumer client. Error [%v]", err)
+				}
+			}
+			return nil
+		},
+	})
 }

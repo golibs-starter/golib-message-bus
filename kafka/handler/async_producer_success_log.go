@@ -9,13 +9,13 @@ import (
 
 func AsyncProducerSuccessLogHandler(producer core.AsyncProducer, eventProps *event.Properties) {
 	go func() {
-		messageFormat := "Success to produce kafka message %s"
+		messageFormat := "Success to produce to kafka partition [%d], offset [%d], message %s"
 		for msg := range producer.Successes() {
 			descMessage := log.DescMessage(msg, eventProps.Log.NotLogPayloadForEvents)
 			if metadata, ok := msg.Metadata.(map[string]interface{}); ok {
-				coreLog.Infow(log.GetLoggingContext(metadata), messageFormat, descMessage)
+				coreLog.Infow(log.GetLoggingContext(metadata), messageFormat, msg.Partition, msg.Offset, descMessage)
 			} else {
-				coreLog.Infof(messageFormat, descMessage)
+				coreLog.Infof(messageFormat, msg.Partition, msg.Offset, descMessage)
 			}
 		}
 	}()

@@ -57,18 +57,18 @@ func (c *SaramaConsumer) Start(ctx context.Context) {
 		log.Infof("Consumer [%s] with topic [%v] is running", c.name, topics)
 		if err := c.consumerGroup.Consume(ctx, topics, c.consumerGroupHandler); err != nil {
 			if err == sarama.ErrClosedConsumerGroup {
-				log.Infof("Consume group [%s] is closed when consume topics [%v], detail [%s]",
+				log.Infof("Consumer [%s] is closed when consume topics [%v], detail [%s]",
 					c.name, topics, err.Error())
 			} else if !c.running {
-				log.Infof("Consumer group [%s] is closed when consume topics [%v]",
+				log.Infof("Consumer [%s] is closed when consume topics [%v]",
 					c.name, topics)
 			} else {
-				log.Errorf("Consume group [%s] error when consume topics [%v], error [%v]",
+				log.Errorf("Consume [%s] error when consume topics [%v], error [%v]",
 					c.name, topics, err)
 			}
 		}
 	}
-	log.Infof("Consumer group [%s] with topic [%v] is closed", c.name, topics)
+	log.Infof("Consumer [%s] with topic [%v] is closed", c.name, topics)
 }
 
 func (c *SaramaConsumer) Close() {

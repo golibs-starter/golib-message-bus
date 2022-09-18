@@ -15,11 +15,14 @@ func (m MessageHeader) String() string {
 }
 
 type Message struct {
-	Topic    string
-	Key      []byte
-	Value    []byte
-	Headers  []MessageHeader
-	Metadata interface{}
+	Topic     string
+	Key       []byte
+	Value     []byte
+	Headers   []MessageHeader
+	Metadata  interface{}
+	Partition int32
+	Offset    int64
+	Timestamp time.Time
 }
 
 func (m Message) String() string {
