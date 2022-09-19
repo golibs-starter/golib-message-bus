@@ -61,6 +61,15 @@ func KafkaConsumerOpt() fx.Option {
 	)
 }
 
+func KafkaConsumerReadyWaitOpt() fx.Option {
+	return fx.Invoke(func(consumers core.Consumer) {
+		log.Info("Wait all consumers are ready")
+		// This will block until all consumers are ready
+		<-consumers.WaitForReady()
+		log.Info("All consumers are ready")
+	})
+}
+
 func KafkaGracefulShutdownOpt() fx.Option {
 	return fx.Invoke(AppendGracefulShutdownBehavior)
 }

@@ -14,10 +14,11 @@ type SaramaConsumer struct {
 	client               sarama.Client
 	consumerGroup        sarama.ConsumerGroup
 	consumerHandler      core.ConsumerHandler
-	consumerGroupHandler sarama.ConsumerGroupHandler
+	consumerGroupHandler *ConsumerGroupHandler
 	name                 string
 	topic                string
 	running              bool
+	waitHandlerReady     chan bool
 }
 
 func NewSaramaConsumer(
@@ -30,13 +31,15 @@ func NewSaramaConsumer(
 	if err != nil {
 		return nil, errors.WithMessage(err, "Error when create sarama consumer group")
 	}
+	consumerGroupHandler := NewConsumerGroupHandler(client, handler.HandlerFunc, mapper)
 	return &SaramaConsumer{
 		client:               client,
 		consumerGroup:        consumerGroup,
 		consumerHandler:      handler,
-		consumerGroupHandler: NewConsumerGroupHandler(handler.HandlerFunc, mapper),
+		consumerGroupHandler: consumerGroupHandler,
 		name:                 coreUtils.GetStructShortName(handler),
 		topic:                topicConsumer.Topic,
+		waitHandlerReady:     consumerGroupHandler.WaitForReady(),
 	}, nil
 }
 
@@ -67,11 +70,16 @@ func (c *SaramaConsumer) Start(ctx context.Context) {
 					c.name, topics, err)
 			}
 		}
+		c.consumerGroupHandler.MarkUnready()
 	}
 	log.Infof("Consumer [%s] with topic [%v] is closed", c.name, topics)
 }
 
-func (c *SaramaConsumer) Close() {
+func (c SaramaConsumer) WaitForReady() chan bool {
+	return c.waitHandlerReady
+}
+
+func (c *SaramaConsumer) Stop() {
 	log.Infof("Consumer [%s] is stopping", c.name)
 	defer log.Infof("Consumer [%s] stopped", c.name)
 	c.running = false

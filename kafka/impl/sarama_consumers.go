@@ -17,16 +17,17 @@ type SaramaConsumers struct {
 	kafkaConsumerProps *properties.KafkaConsumer
 	mapper             *SaramaMapper
 	consumers          map[string]*SaramaConsumer
+	unready            chan bool
 }
 
 func NewSaramaConsumers(
 	client sarama.Client,
-	props *properties.Client,
-	kafkaConsumerProps *properties.KafkaConsumer,
+	globalProps *properties.Client,
+	consumerProps *properties.KafkaConsumer,
 	mapper *SaramaMapper,
 	handlers []core.ConsumerHandler,
 ) (core.Consumer, error) {
-	if len(kafkaConsumerProps.HandlerMappings) < 1 {
+	if len(consumerProps.HandlerMappings) < 1 {
 		return nil, errors.New("[SaramaConsumers] Missing handler mapping")
 	}
 
@@ -37,10 +38,11 @@ func NewSaramaConsumers(
 
 	kafkaConsumers := SaramaConsumers{
 		client:             client,
-		props:              &props.Consumer,
-		kafkaConsumerProps: kafkaConsumerProps,
+		props:              &globalProps.Consumer,
+		kafkaConsumerProps: consumerProps,
 		mapper:             mapper,
 		consumers:          make(map[string]*SaramaConsumer),
+		unready:            make(chan bool),
 	}
 
 	if err := kafkaConsumers.init(handlerMap); err != nil {
@@ -72,11 +74,23 @@ func (s *SaramaConsumers) init(handlerMap map[string]core.ConsumerHandler) error
 }
 
 func (s *SaramaConsumers) Start(ctx context.Context) {
+	wg := &sync.WaitGroup{}
+	wg.Add(len(s.consumers))
 	for _, consumer := range s.consumers {
+		go func(consumer *SaramaConsumer) {
+			defer wg.Done()
+			<-consumer.WaitForReady()
+		}(consumer)
 		go func(consumer *SaramaConsumer) {
 			consumer.Start(ctx)
 		}(consumer)
 	}
+	wg.Wait()
+	close(s.unready)
+}
+
+func (s SaramaConsumers) WaitForReady() chan bool {
+	return s.unready
 }
 
 func (s *SaramaConsumers) Stop() {
@@ -85,7 +99,7 @@ func (s *SaramaConsumers) Stop() {
 	for _, consumer := range s.consumers {
 		go func(consumer *SaramaConsumer) {
 			defer wg.Done()
-			consumer.Close()
+			consumer.Stop()
 		}(consumer)
 	}
 	wg.Wait()

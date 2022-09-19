@@ -1,10 +1,12 @@
 package impl
 
 import (
+	"fmt"
 	"github.com/Shopify/sarama"
 	"github.com/pkg/errors"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/constant"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
+	"gitlab.com/golibs-starter/golib/log"
 )
 
 func NewSaramaConsumerClient(globalProps *properties.Client) (sarama.Client, error) {
@@ -13,6 +15,15 @@ func NewSaramaConsumerClient(globalProps *properties.Client) (sarama.Client, err
 		return nil, errors.WithMessage(err, "Create sarama config error")
 	}
 	props := globalProps.Consumer
+	config.Consumer.Return.Errors = true
+	if props.CommitMode == constant.CommitModeAutoInterval {
+		config.Consumer.Offsets.AutoCommit.Enable = true
+	} else if props.CommitMode == constant.CommitModeAutoImmediately {
+		config.Consumer.Offsets.AutoCommit.Enable = false
+	} else {
+		return nil, fmt.Errorf("commit mode [%s] is not supported", props.CommitMode)
+	}
+	log.Debugf("Initial sarama consumer client with commit mode: %s", props.CommitMode)
 	switch props.InitialOffset {
 	case constant.InitialOffsetNewest:
 		config.Consumer.Offsets.Initial = sarama.OffsetNewest
@@ -21,8 +32,6 @@ func NewSaramaConsumerClient(globalProps *properties.Client) (sarama.Client, err
 	default:
 		config.Consumer.Offsets.Initial = props.InitialOffset
 	}
-	config.Consumer.Return.Errors = true
-	config.Consumer.Offsets.AutoCommit.Enable = true
 	if err := config.Validate(); err != nil {
 		return nil, errors.WithMessage(err, "Error when validate consumer client config")
 	}
