@@ -6,8 +6,8 @@ require (
 	github.com/Shopify/sarama v1.36.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.0
-	gitlab.com/golibs-starter/golib v0.11.0
-	go.uber.org/fx v1.13.1
+	gitlab.com/golibs-starter/golib v0.12.0
+	go.uber.org/fx v1.18.1
 )
 
 require (
@@ -15,7 +15,7 @@ require (
 	github.com/eapache/go-resiliency v1.3.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
-	github.com/emirpasic/gods v1.12.0 // indirect
+	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
@@ -47,9 +47,9 @@ require (
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/zenthangplus/defaults v1.6.2-beta // indirect
 	go.uber.org/atomic v1.7.0 // indirect
-	go.uber.org/dig v1.10.0 // indirect
+	go.uber.org/dig v1.15.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
-	go.uber.org/zap v1.18.1 // indirect
+	go.uber.org/zap v1.21.0 // indirect
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
 	golang.org/x/net v0.0.0-20220809184613-07c6da5e1ced // indirect
 	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10 // indirect

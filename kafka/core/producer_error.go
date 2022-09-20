@@ -10,7 +10,7 @@ type ProducerError struct {
 }
 
 func (pe ProducerError) Error() string {
-	return fmt.Sprintf("kafka: Failed to produce message to topic %s: %s", pe.Msg.Topic, pe.Err)
+	return fmt.Sprintf("Failed to produce message to topic %s: %s", pe.Msg.Topic, pe.Err)
 }
 
 func (pe ProducerError) Unwrap() error {

@@ -4,105 +4,87 @@ import (
 	"context"
 	"github.com/Shopify/sarama"
 	"github.com/pkg/errors"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/constant"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/utils"
+	coreUtils "gitlab.com/golibs-starter/golib/utils"
 	"gitlab.com/golibs-starter/golib/web/log"
 )
 
 type SaramaConsumer struct {
-	client        sarama.Client
-	consumerGroup sarama.ConsumerGroup
-	mapper        *SaramaMapper
-	topic         string
-	handler       core.ConsumerHandler
+	client               sarama.Client
+	consumerGroup        sarama.ConsumerGroup
+	consumerHandler      core.ConsumerHandler
+	consumerGroupHandler *ConsumerGroupHandler
+	name                 string
+	topic                string
+	running              bool
+	waitHandlerReady     chan bool
 }
 
 func NewSaramaConsumer(
-	props *properties.Consumer,
+	client sarama.Client,
 	mapper *SaramaMapper,
 	topicConsumer *properties.TopicConsumer,
 	handler core.ConsumerHandler,
 ) (*SaramaConsumer, error) {
-	config := sarama.NewConfig()
-	if props.ClientId != "" {
-		config.ClientID = props.ClientId
-	}
-	config.Version = sarama.V1_0_0_0
-	config.Consumer.Return.Errors = true
-
-	if props.SecurityProtocol == core.SecurityProtocolTls {
-		if props.Tls == nil {
-			return nil, errors.New("Tls config not found when using SecurityProtocol=TLS")
-		}
-		tlsConfig, err := utils.NewTLSConfig(
-			props.Tls.CertFileLocation,
-			props.Tls.KeyFileLocation,
-			props.Tls.CaFileLocation,
-		)
-		if err != nil {
-			return nil, errors.WithMessage(err, "Error when load TLS config")
-		}
-		tlsConfig.InsecureSkipVerify = props.Tls.InsecureSkipVerify
-		config.Net.TLS.Enable = true
-		config.Net.TLS.Config = tlsConfig
-	}
-
-	switch props.InitialOffset {
-	case constant.InitialOffsetNewest:
-		config.Consumer.Offsets.Initial = sarama.OffsetNewest
-	case constant.InitialOffsetOldest:
-		config.Consumer.Offsets.Initial = sarama.OffsetOldest
-	default:
-		config.Consumer.Offsets.Initial = props.InitialOffset
-	}
-
-	client, err := sarama.NewClient(props.BootstrapServers, config)
-	if err != nil {
-		return nil, errors.WithMessage(err, "Error when create sarama consumer client")
-	}
-
 	consumerGroup, err := sarama.NewConsumerGroupFromClient(topicConsumer.GroupId, client)
 	if err != nil {
 		return nil, errors.WithMessage(err, "Error when create sarama consumer group")
 	}
-
+	consumerGroupHandler := NewConsumerGroupHandler(client, handler.HandlerFunc, mapper)
 	return &SaramaConsumer{
-		client:        client,
-		mapper:        mapper,
-		handler:       handler,
-		topic:         topicConsumer.Topic,
-		consumerGroup: consumerGroup,
+		client:               client,
+		consumerGroup:        consumerGroup,
+		consumerHandler:      handler,
+		consumerGroupHandler: consumerGroupHandler,
+		name:                 coreUtils.GetStructShortName(handler),
+		topic:                topicConsumer.Topic,
+		waitHandlerReady:     consumerGroupHandler.WaitForReady(),
 	}, nil
 }
 
 func (c *SaramaConsumer) Start(ctx context.Context) {
 	topics := []string{c.topic}
-	consumerName := utils.GetStructName(c.handler)
-	log.Infof("Consumer [%s] with topic [%v] is starting", consumerName, topics)
+	log.Infof("Consumer [%s] with topic [%v] is starting", c.name, topics)
 
 	// Track errors
 	go func() {
 		for err := range c.consumerGroup.Errors() {
-			log.Errorf("ConsumerGroup error for consumer [%s], detail: [%v]", consumerName, err)
+			log.Errorf("Consumer group error for consumer [%s], detail: [%v]", c.name, err)
 		}
 	}()
 
 	// Iterate over consumers sessions.
-	log.Infof("Consumer [%s] with topic [%v] is running", consumerName, topics)
-	handler := NewConsumerGroupHandler(c.handler.HandlerFunc, c.mapper)
-	if err := c.consumerGroup.Consume(ctx, topics, handler); err != nil {
-		log.Errorf("Error when consume message in topics [%v] for consumer [%s], detail [%v]", topics, consumerName, err)
+	c.running = true
+	for c.running {
+		log.Infof("Consumer [%s] with topic [%v] is running", c.name, topics)
+		if err := c.consumerGroup.Consume(ctx, topics, c.consumerGroupHandler); err != nil {
+			if err == sarama.ErrClosedConsumerGroup {
+				log.Infof("Consumer [%s] is closed when consume topics [%v], detail [%s]",
+					c.name, topics, err.Error())
+			} else if !c.running {
+				log.Infof("Consumer [%s] is closed when consume topics [%v]",
+					c.name, topics)
+			} else {
+				log.Errorf("Consume [%s] error when consume topics [%v], error [%v]",
+					c.name, topics, err)
+			}
+		}
+		c.consumerGroupHandler.MarkUnready()
 	}
+	log.Infof("Consumer [%s] with topic [%v] is closed", c.name, topics)
 }
 
-func (c *SaramaConsumer) Close() {
-	consumerName := utils.GetStructName(c.handler)
-	log.Infof("Consumer %s is stopping", consumerName)
-	defer log.Infof("Consumer %s stopped", consumerName)
+func (c SaramaConsumer) WaitForReady() chan bool {
+	return c.waitHandlerReady
+}
+
+func (c *SaramaConsumer) Stop() {
+	log.Infof("Consumer [%s] is stopping", c.name)
+	defer log.Infof("Consumer [%s] stopped", c.name)
+	c.running = false
 	if err := c.consumerGroup.Close(); err != nil {
-		log.Errorf("Consumer %v could not stop: %v", consumerName, err)
+		log.Errorf("Consumer [%s] could not stop. Error [%v]", c.name, err)
 	}
-	c.handler.Close()
+	c.consumerHandler.Close()
 }

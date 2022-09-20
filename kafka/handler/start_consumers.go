@@ -6,5 +6,5 @@ import (
 )
 
 func StartConsumers(consumer core.Consumer, ctx context.Context) {
-	consumer.Start(ctx)
+	go consumer.Start(ctx)
 }
