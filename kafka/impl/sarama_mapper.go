@@ -13,6 +13,9 @@ func NewSaramaMapper() *SaramaMapper {
 }
 
 func (p SaramaMapper) ToSaramaHeaders(headers []core.MessageHeader) []sarama.RecordHeader {
+	if headers == nil {
+		return nil
+	}
 	saramaHeaders := make([]sarama.RecordHeader, 0)
 	for _, header := range headers {
 		saramaHeaders = append(saramaHeaders, sarama.RecordHeader{
@@ -24,6 +27,9 @@ func (p SaramaMapper) ToSaramaHeaders(headers []core.MessageHeader) []sarama.Rec
 }
 
 func (p SaramaMapper) ToCoreHeaders(headers []sarama.RecordHeader) []core.MessageHeader {
+	if headers == nil {
+		return nil
+	}
 	coreHeaders := make([]core.MessageHeader, 0)
 	for _, header := range headers {
 		coreHeaders = append(coreHeaders, p.toCoreHeader(&header))
@@ -32,6 +38,9 @@ func (p SaramaMapper) ToCoreHeaders(headers []sarama.RecordHeader) []core.Messag
 }
 
 func (p SaramaMapper) PtrToCoreHeaders(headers []*sarama.RecordHeader) []core.MessageHeader {
+	if headers == nil {
+		return nil
+	}
 	coreHeaders := make([]core.MessageHeader, 0)
 	for _, header := range headers {
 		coreHeaders = append(coreHeaders, p.toCoreHeader(header))
@@ -43,5 +52,41 @@ func (p SaramaMapper) toCoreHeader(header *sarama.RecordHeader) core.MessageHead
 	return core.MessageHeader{
 		Key:   header.Key,
 		Value: header.Value,
+	}
+}
+
+func (p SaramaMapper) ToCoreMessage(msg *sarama.ProducerMessage) *core.Message {
+	var key, value []byte
+	if msg.Key != nil {
+		key, _ = msg.Key.Encode()
+	}
+	if msg.Value != nil {
+		value, _ = msg.Value.Encode()
+	}
+	var headers []core.MessageHeader
+	if msg.Headers != nil {
+		headers = p.ToCoreHeaders(msg.Headers)
+	}
+	return &core.Message{
+		Topic:     msg.Topic,
+		Key:       key,
+		Value:     value,
+		Headers:   headers,
+		Metadata:  msg.Metadata,
+		Partition: msg.Partition,
+		Offset:    msg.Offset,
+		Timestamp: msg.Timestamp,
+	}
+}
+
+func (p SaramaMapper) ToCoreConsumerMessage(msg *sarama.ConsumerMessage) *core.ConsumerMessage {
+	return &core.ConsumerMessage{
+		Key:       msg.Key,
+		Value:     msg.Value,
+		Topic:     msg.Topic,
+		Headers:   p.PtrToCoreHeaders(msg.Headers),
+		Partition: msg.Partition,
+		Offset:    msg.Offset,
+		Timestamp: msg.Timestamp,
 	}
 }
