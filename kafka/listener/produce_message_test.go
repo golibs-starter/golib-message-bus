@@ -20,19 +20,13 @@ type TestProducer struct {
 	message *core.Message
 }
 
-func (t *TestProducer) Successes() <-chan *core.Message {
-	panic("implement me")
-}
-
-func (t *TestProducer) Errors() <-chan *core.ProducerError {
-	panic("implement me")
-}
-
-func (t *TestProducer) Send(m *core.Message) {
+func (t *TestProducer) Send(m *core.Message) (partition int32, offset int64, err error) {
 	t.message = m
+	return 1, 0, nil
 }
 
-func (t TestProducer) Close() {
+func (t *TestProducer) Close() error {
+	return nil
 }
 
 type TestEvent struct {
