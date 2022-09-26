@@ -26,7 +26,7 @@ func NewSaramaConsumers(
 	consumerProps *properties.KafkaConsumer,
 	mapper *SaramaMapper,
 	handlers []core.ConsumerHandler,
-) (core.Consumer, error) {
+) (*SaramaConsumers, error) {
 	if len(consumerProps.HandlerMappings) < 1 {
 		return nil, errors.New("[SaramaConsumers] Missing handler mapping")
 	}
