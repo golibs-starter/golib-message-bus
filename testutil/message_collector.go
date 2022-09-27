@@ -1,4 +1,4 @@
-package golibmsgTestUtils
+package golibmsgTestUtil
 
 import (
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
