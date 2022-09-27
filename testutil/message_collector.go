@@ -2,13 +2,8 @@ package golibmsgTestUtil
 
 import (
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
-	"go.uber.org/fx"
 	"sync"
 )
-
-func MessageCollectorOpt() fx.Option {
-	return fx.Provide(NewMessageCollector)
-}
 
 type MessageCollector struct {
 	messages map[string][]string
