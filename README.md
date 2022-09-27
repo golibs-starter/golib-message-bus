@@ -57,10 +57,11 @@ func main() {
         // ==================== TEST UTILS =================
         // This useful in test when you want to
         // reset (remove) kafka consumer group every test run.
+        // Eg: https://gitlab.com/golibs-starter/golib-sample/-/tree/develop/src/worker/testing/test_suite.go
         golibmsgTestUtil.ResetKafkaConsumerGroupOpt(),
 
-        // When you want to collect messages during test.
-        // This option needs to come with configuration:
+        // This useful when you want to collect messages during test.
+        // This option needs to come with some configuration:
         // app.kafka.consumer:
         //      handlerMappings:
         //         MessageCollectorHandler:
@@ -69,7 +70,7 @@ func main() {
         //                 - c1.order.order-created.test
         //             groupId: c1.MessageCollectorHandler.test
         //             enable: true
-        //
+        // Eg: https://gitlab.com/golibs-starter/golib-sample/-/tree/develop/src/worker/testing/test_suite.go
         golibmsgTestUtil.MessageCollectorOpt(),
     ).Run()
 }
