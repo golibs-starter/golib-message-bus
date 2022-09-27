@@ -22,6 +22,7 @@ package main
 import (
     "gitlab.com/golibs-starter/golib-message-bus"
     "gitlab.com/golibs-starter/golib-message-bus/kafka/core"
+    "gitlab.com/golibs-starter/golib-message-bus/testutil"
     "go.uber.org/fx"
 )
 
@@ -51,6 +52,25 @@ func main() {
         // When you want to register a consumer.
         // Consumer has to implement core.ConsumerHandler
         golibmsg.ProvideConsumer(NewCustomConsumer),
+
+
+        // ==================== TEST UTILS =================
+        // This useful in test when you want to
+        // reset (remove) kafka consumer group every test run.
+        golibmsgTestUtil.ResetKafkaConsumerGroupOpt(),
+
+        // When you want to collect messages during test.
+        // This option needs to come with configuration:
+        // app.kafka.consumer:
+        //      handlerMappings:
+        //         MessageCollectorHandler:
+        //             topics: # List of topics that messages will be collected.
+        //                 - c1.http.request-completed.test
+        //                 - c1.order.order-created.test
+        //             groupId: c1.MessageCollectorHandler.test
+        //             enable: true
+        //
+        golibmsgTestUtil.MessageCollectorOpt(),
     ).Run()
 }
 
@@ -179,5 +199,11 @@ app:
                 PushOrderToElasticSearchHandler:
                     topic: c1.order.order-created
                     groupId: c1.order.order-created.PushRequestCompletedEsHandler.local
+                    enable: true
+                MessageCollectorHandler:
+                    topics: # When you want to consume multiple topics
+                        - c1.http.request-completed.test
+                        - c1.order.order-created.test
+                    groupId: c1.MessageCollectorHandler.test
                     enable: true
 ```
