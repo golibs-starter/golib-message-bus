@@ -3,6 +3,7 @@ package golibmsgTestUtil
 import (
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
 	"go.uber.org/fx"
+	"sync"
 )
 
 func MessageCollectorOpt() fx.Option {
@@ -11,6 +12,7 @@ func MessageCollectorOpt() fx.Option {
 
 type MessageCollector struct {
 	messages map[string][]string
+	mu       sync.RWMutex
 }
 
 func NewMessageCollector() *MessageCollector {
@@ -20,6 +22,8 @@ func NewMessageCollector() *MessageCollector {
 }
 
 func (k *MessageCollector) PushMessage(message *core.ConsumerMessage) {
+	k.mu.Lock()
+	defer k.mu.Unlock()
 	if _, ok := k.messages[message.Topic]; ok {
 		k.messages[message.Topic] = append(k.messages[message.Topic], string(message.Value))
 	} else {
@@ -28,12 +32,16 @@ func (k *MessageCollector) PushMessage(message *core.ConsumerMessage) {
 }
 
 func (k *MessageCollector) ClearMessages(topic string) {
+	k.mu.Lock()
+	defer k.mu.Unlock()
 	if _, ok := k.messages[topic]; ok {
 		k.messages[topic] = []string{}
 	}
 }
 
 func (k *MessageCollector) Count(topic string) int64 {
+	k.mu.RLock()
+	defer k.mu.RUnlock()
 	if val, ok := k.messages[topic]; ok {
 		return int64(len(val))
 	}
@@ -41,6 +49,8 @@ func (k *MessageCollector) Count(topic string) int64 {
 }
 
 func (k *MessageCollector) GetMessages(topic string) []string {
+	k.mu.RLock()
+	defer k.mu.RUnlock()
 	if messages, ok := k.messages[topic]; ok {
 		return messages
 	}
