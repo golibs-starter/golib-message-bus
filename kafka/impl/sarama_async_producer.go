@@ -14,7 +14,7 @@ type SaramaAsyncProducer struct {
 	mapper      *SaramaMapper
 }
 
-func NewSaramaAsyncProducer(client sarama.Client, mapper *SaramaMapper) (core.AsyncProducer, error) {
+func NewSaramaAsyncProducer(client sarama.Client, mapper *SaramaMapper) (*SaramaAsyncProducer, error) {
 	asyncProducer, err := sarama.NewAsyncProducerFromClient(client)
 	if err != nil {
 		return nil, errors.WithMessage(err, "Error when create new async producer")

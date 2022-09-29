@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
+	"gitlab.com/golibs-starter/golib/log"
 	coreUtils "gitlab.com/golibs-starter/golib/utils"
 	"strings"
 	"sync"
@@ -26,7 +27,7 @@ func NewSaramaConsumers(
 	consumerProps *properties.KafkaConsumer,
 	mapper *SaramaMapper,
 	handlers []core.ConsumerHandler,
-) (core.Consumer, error) {
+) (*SaramaConsumers, error) {
 	if len(consumerProps.HandlerMappings) < 1 {
 		return nil, errors.New("[SaramaConsumers] Missing handler mapping")
 	}
@@ -55,15 +56,15 @@ func NewSaramaConsumers(
 func (s *SaramaConsumers) init(handlerMap map[string]core.ConsumerHandler) error {
 	for key, config := range s.kafkaConsumerProps.HandlerMappings {
 		if !config.Enable {
+			log.Debugf("Kafka consumer key [%s] is not enabled", key)
 			continue
 		}
 		key = strings.ToLower(strings.TrimSpace(key))
 		handler, exists := handlerMap[key]
 		if !exists {
+			log.Debugf("Kafka consumer key [%s] is not exists in handler list", key)
 			continue
 		}
-		config.Topic = strings.TrimSpace(config.Topic)
-		config.GroupId = strings.TrimSpace(config.GroupId)
 		saramaConsumer, err := NewSaramaConsumer(s.client, s.mapper, &config, handler)
 		if err != nil {
 			return err

@@ -36,10 +36,12 @@ func KafkaProducerOpt() fx.Option {
 		}),
 		fx.Provide(fx.Annotate(
 			impl.NewSaramaSyncProducer,
+			fx.As(new(core.SyncProducer)),
 			fx.ParamTags(`name:"sarama_producer_client"`),
 		)),
 		fx.Provide(fx.Annotate(
 			impl.NewSaramaAsyncProducer,
+			fx.As(new(core.AsyncProducer)),
 			fx.ParamTags(`name:"sarama_producer_client"`),
 		)),
 		golib.ProvideProps(properties.NewEventProducer),
