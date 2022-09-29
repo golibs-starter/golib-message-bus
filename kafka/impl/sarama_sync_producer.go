@@ -14,7 +14,7 @@ type SaramaSyncProducer struct {
 	mapper      *SaramaMapper
 }
 
-func NewSaramaSyncProducer(client sarama.Client, mapper *SaramaMapper) (core.SyncProducer, error) {
+func NewSaramaSyncProducer(client sarama.Client, mapper *SaramaMapper) (*SaramaSyncProducer, error) {
 	syncProducer, err := sarama.NewSyncProducerFromClient(client)
 	if err != nil {
 		return nil, errors.WithMessage(err, "Error when create new sync producer")
