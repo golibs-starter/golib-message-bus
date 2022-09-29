@@ -2,7 +2,7 @@ package golibmsgTestUtil
 
 import (
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
-	"gitlab.com/golibs-starter/golib/web/log"
+	"gitlab.com/golibs-starter/golib/log"
 )
 
 type MessageCollectorHandler struct {
@@ -14,7 +14,7 @@ func NewMessageCollectorHandler(collector *MessageCollector) core.ConsumerHandle
 }
 
 func (c *MessageCollectorHandler) HandlerFunc(msg *core.ConsumerMessage) {
-	log.Infof("[MessageCollectorHandler] Receive message [%s]", string(msg.Value))
+	log.Infof("[MessageCollectorHandler] Receive message [%s] from topic [%s]", string(msg.Value), msg.Topic)
 	c.collector.PushMessage(msg)
 }
 
