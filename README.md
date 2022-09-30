@@ -46,8 +46,9 @@ func main() {
         golibmsg.KafkaConsumerReadyWaitOpt(),
 
         // When you want to enable graceful shutdown.
-        // This option will invoke producer/consumer close functions when OnStop is hooked.
-        golibmsg.KafkaGracefulShutdownOpt(),
+        // OnStop hooks will run in reverse order.
+        golibmsg.OnStopProducerOpt(),
+        golibmsg.OnStopConsumerOpt(),
 
         // When you want to register a consumer.
         // Consumer has to implement core.ConsumerHandler

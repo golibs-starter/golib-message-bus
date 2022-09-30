@@ -72,8 +72,12 @@ func KafkaConsumerReadyWaitOpt() fx.Option {
 	})
 }
 
-func KafkaGracefulShutdownOpt() fx.Option {
-	return fx.Invoke(AppendGracefulShutdownBehavior)
+func OnStopProducerOpt() fx.Option {
+	return fx.Invoke(OnStopProducerHook)
+}
+
+func OnStopConsumerOpt() fx.Option {
+	return fx.Invoke(OnStopConsumerHook)
 }
 
 type KafkaConsumersIn struct {
@@ -93,20 +97,18 @@ func ProvideConsumer(handler interface{}) fx.Option {
 	return fx.Provide(fx.Annotated{Group: "kafka_consumer_handler", Target: handler})
 }
 
-type KafkaGracefulShutDownIn struct {
+type OnStopProducerIn struct {
 	fx.In
 	Lc             fx.Lifecycle
 	ProducerClient sarama.Client      `name:"sarama_producer_client" optional:"true"`
 	SyncProducer   core.SyncProducer  `optional:"true"`
 	AsyncProducer  core.AsyncProducer `optional:"true"`
-	ConsumerClient sarama.Client      `name:"sarama_consumer_client" optional:"true"`
-	ConsumerGroup  core.Consumer      `optional:"true"`
 }
 
-func AppendGracefulShutdownBehavior(in KafkaGracefulShutDownIn) {
+func OnStopProducerHook(in OnStopProducerIn) {
 	in.Lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
-			log.Infof("Receive stop signal for kafka")
+			log.Infof("Receive stop signal for kafka producer")
 			if in.SyncProducer != nil {
 				if err := in.SyncProducer.Close(); err != nil {
 					log.Errorf("Cannot close kafka sync producer. Error [%v]", err)
@@ -123,6 +125,22 @@ func AppendGracefulShutdownBehavior(in KafkaGracefulShutDownIn) {
 					log.Errorf("Cannot stop kafka producer client. Error [%v]", err)
 				}
 			}
+			return nil
+		},
+	})
+}
+
+type OnStopConsumerIn struct {
+	fx.In
+	Lc             fx.Lifecycle
+	ConsumerClient sarama.Client `name:"sarama_consumer_client" optional:"true"`
+	ConsumerGroup  core.Consumer `optional:"true"`
+}
+
+func OnStopConsumerHook(in OnStopConsumerIn) {
+	in.Lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			log.Infof("Receive stop signal for kafka consumer")
 			if in.ConsumerGroup != nil {
 				in.ConsumerGroup.Stop()
 			}

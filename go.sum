@@ -374,8 +374,8 @@ github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9dec
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/zenthangplus/defaults v1.6.2-beta h1:2QDyud3qVvnfi/g0U3ub3EB0PI9H+D7osUAbdwCBY5Q=
 github.com/zenthangplus/defaults v1.6.2-beta/go.mod h1:WUOsmf5WcbZo/HrGwmDrpXcM9AF5ugQ4TUkijs8MQZs=
-gitlab.com/golibs-starter/golib v0.12.2 h1:QSNCd2aoMyoTk1RdmuhT6kpDKamhEnmCUNsvGvD9Coo=
-gitlab.com/golibs-starter/golib v0.12.2/go.mod h1:2TvSqo5fT+SbujIwTGGHmp+exHhcz5EY5lAUMHS0rac=
+gitlab.com/golibs-starter/golib v0.12.3 h1:ftBqUhHTV4Q6aN4zMFpqaRfhv1WJTw68fRy+h0gYXDI=
+gitlab.com/golibs-starter/golib v0.12.3/go.mod h1:2TvSqo5fT+SbujIwTGGHmp+exHhcz5EY5lAUMHS0rac=
 go.etcd.io/etcd/api/v3 v3.5.0/go.mod h1:cbVKeC6lCfl7j/8jBhAK6aIYO9XOjdptoxU/nLQcPvs=
 go.etcd.io/etcd/client/pkg/v3 v3.5.0/go.mod h1:IJHfcCEKxYu1Os13ZdwCwIUTUVGYTSAM3YSwc9/Ac1g=
 go.etcd.io/etcd/client/v2 v2.305.0/go.mod h1:h9puh54ZTgAKtEbut2oe9P4L/oqKCVB6xsXlzd7alYQ=
