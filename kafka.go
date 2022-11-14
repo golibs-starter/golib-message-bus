@@ -59,7 +59,7 @@ func KafkaConsumerOpt() fx.Option {
 			Target: impl.NewSaramaConsumerClient,
 		}),
 		fx.Provide(NewSaramaConsumers),
-		fx.Invoke(handler.StartConsumers),
+		fx.Invoke(OnStartConsumerHook),
 	)
 }
 
@@ -135,6 +135,15 @@ type OnStopConsumerIn struct {
 	Lc             fx.Lifecycle
 	ConsumerClient sarama.Client `name:"sarama_consumer_client" optional:"true"`
 	ConsumerGroup  core.Consumer `optional:"true"`
+}
+
+func OnStartConsumerHook(lc fx.Lifecycle, consumer core.Consumer) {
+	lc.Append(fx.Hook{
+		OnStart: func(ctx context.Context) error {
+			go consumer.Start(ctx)
+			return nil
+		},
+	})
 }
 
 func OnStopConsumerHook(in OnStopConsumerIn) {
