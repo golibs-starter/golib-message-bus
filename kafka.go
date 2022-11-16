@@ -137,10 +137,10 @@ type OnStopConsumerIn struct {
 	ConsumerGroup  core.Consumer `optional:"true"`
 }
 
-func OnStartConsumerHook(lc fx.Lifecycle, consumer core.Consumer) {
+func OnStartConsumerHook(lc fx.Lifecycle, consumer core.Consumer, golibCtx context.Context) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			go consumer.Start(ctx)
+			go consumer.Start(golibCtx)
 			return nil
 		},
 	})
