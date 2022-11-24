@@ -44,6 +44,10 @@ func KafkaProducerOpt() fx.Option {
 			fx.As(new(core.AsyncProducer)),
 			fx.ParamTags(`name:"sarama_producer_client"`),
 		)),
+		fx.Provide(fx.Annotate(
+			listener.NewDefaultEventConverter,
+			fx.As(new(listener.EventConverter)),
+		)),
 		golib.ProvideProps(properties.NewEventProducer),
 		golib.ProvideEventListener(listener.NewProduceMessage),
 		fx.Invoke(handler.AsyncProducerErrorLogHandler),

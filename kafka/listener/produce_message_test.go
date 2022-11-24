@@ -42,17 +42,17 @@ func newTestEvent(ctx context.Context, payload interface{}) *TestEvent {
 	return &TestEvent{AbstractEvent: webEvent.NewAbstractEvent(ctx, "TestEvent"), PayloadData: payload}
 }
 
-func TestProduceMessage_WhenTopicMappingNotExists_ShouldDoNothing(t *testing.T) {
+func TestProduceMessage_WhenTopicMappingNotExists_ShouldNotSupport(t *testing.T) {
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
 	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{}}
 	eventProps := &event.Properties{}
-	listener := NewProduceMessage(producer, appProps, eventProducerProps, eventProps)
-	listener.Handle(webEvent.NewAbstractEvent(context.Background(), "TestEvent"))
-	assert.Nil(t, producer.message)
+	converter := NewDefaultEventConverter(appProps, eventProducerProps)
+	listener := NewProduceMessage(producer, eventProducerProps, eventProps, converter)
+	assert.False(t, listener.Supports(webEvent.NewAbstractEvent(context.Background(), "TestEvent")))
 }
 
-func TestProduceMessage_WhenEventTopicIsDisabled_ShouldDoNothing(t *testing.T) {
+func TestProduceMessage_WhenEventTopicIsDisabled_ShouldNotSupport(t *testing.T) {
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
 	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{
@@ -63,21 +63,21 @@ func TestProduceMessage_WhenEventTopicIsDisabled_ShouldDoNothing(t *testing.T) {
 		},
 	}}
 	eventProps := &event.Properties{}
-	listener := NewProduceMessage(producer, appProps, eventProducerProps, eventProps)
-	listener.Handle(webEvent.NewAbstractEvent(context.Background(), "TestEvent"))
-	assert.Nil(t, producer.message)
+	converter := NewDefaultEventConverter(appProps, eventProducerProps)
+	listener := NewProduceMessage(producer, eventProducerProps, eventProps, converter)
+	assert.False(t, listener.Supports(webEvent.NewAbstractEvent(context.Background(), "TestEvent")))
 }
 
-func TestProduceMessage_WhenEventTopicNameIsEmpty_ShouldDoNothing(t *testing.T) {
+func TestProduceMessage_WhenEventTopicNameIsEmpty_ShouldNotSupport(t *testing.T) {
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
 	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{
 		"TestEvent": {TopicName: ""},
 	}}
 	eventProps := &event.Properties{}
-	listener := NewProduceMessage(producer, appProps, eventProducerProps, eventProps)
-	listener.Handle(webEvent.NewAbstractEvent(context.Background(), "TestEvent"))
-	assert.Nil(t, producer.message)
+	converter := NewDefaultEventConverter(appProps, eventProducerProps)
+	listener := NewProduceMessage(producer, eventProducerProps, eventProps, converter)
+	assert.False(t, listener.Supports(webEvent.NewAbstractEvent(context.Background(), "TestEvent")))
 }
 
 func TestProduceMessage_WhenIsApplicationEvent_ShouldSendMessageWithCorrectMessageAndHeaders(t *testing.T) {
@@ -87,7 +87,8 @@ func TestProduceMessage_WhenIsApplicationEvent_ShouldSendMessageWithCorrectMessa
 		"testapplicationevent": {TopicName: "test.application.topic"},
 	}}
 	eventProps := &event.Properties{}
-	listener := NewProduceMessage(producer, appProps, eventProducerProps, eventProps)
+	converter := NewDefaultEventConverter(appProps, eventProducerProps)
+	listener := NewProduceMessage(producer, eventProducerProps, eventProps, converter)
 	testEvent := event.NewApplicationEvent("TestApplicationEvent")
 	listener.Handle(testEvent)
 
@@ -118,7 +119,8 @@ func TestProduceMessage_WhenIsWebEvent_ShouldSendMessageWithCorrectMessageAndHea
 		"testevent": {TopicName: "test.topic"},
 	}}
 	eventProps := &event.Properties{}
-	listener := NewProduceMessage(producer, appProps, eventProducerProps, eventProps)
+	converter := NewDefaultEventConverter(appProps, eventProducerProps)
+	listener := NewProduceMessage(producer, eventProducerProps, eventProps, converter)
 	fakeRequestCtx := context.WithValue(context.Background(), constant.ContextReqAttribute, &webContext.RequestAttributes{
 		CorrelationId:   "test-request-id",
 		DeviceId:        "test-device-id",
@@ -128,6 +130,7 @@ func TestProduceMessage_WhenIsWebEvent_ShouldSendMessageWithCorrectMessageAndHea
 			UserId:            "test-user-id",
 			TechnicalUsername: "test-technical-username",
 		},
+		ServiceCode: appProps.Name,
 	})
 	testEvent := newTestEvent(fakeRequestCtx, "TestEvent")
 	listener.Handle(testEvent)
@@ -177,7 +180,8 @@ func TestProduceMessage_WhenIsWebEventAndNotLogPayload_ShouldSuccess(t *testing.
 			NotLogPayloadForEvents: []string{"TestEvent"},
 		},
 	}
-	listener := NewProduceMessage(producer, appProps, eventProducerProps, eventProps)
+	converter := NewDefaultEventConverter(appProps, eventProducerProps)
+	listener := NewProduceMessage(producer, eventProducerProps, eventProps, converter)
 	testEvent := webEvent.NewAbstractEvent(context.Background(), "TestEvent")
 	listener.Handle(testEvent)
 	assert.NotNil(t, producer.message)
