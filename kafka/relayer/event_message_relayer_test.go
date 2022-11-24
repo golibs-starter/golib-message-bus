@@ -1,4 +1,4 @@
-package listener
+package relayer
 
 import (
 	"context"
@@ -53,17 +53,17 @@ func newTestOrderableEvent(ctx context.Context, payload interface{}) *TestOrdera
 	}
 }
 
-func TestProduceMessage_WhenTopicMappingNotExists_ShouldNotSupport(t *testing.T) {
+func TestEventMessageRelayer_WhenTopicMappingNotExists_ShouldNotSupport(t *testing.T) {
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
 	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{}}
 	eventProps := &event.Properties{}
 	converter := NewDefaultEventConverter(appProps, eventProducerProps)
-	listener := NewProduceMessage(producer, eventProducerProps, eventProps, converter)
+	listener := NewEventMessageRelayer(producer, eventProducerProps, eventProps, converter)
 	assert.False(t, listener.Supports(webEvent.NewAbstractEvent(context.Background(), "TestEvent")))
 }
 
-func TestProduceMessage_WhenEventTopicIsDisabled_ShouldNotSupport(t *testing.T) {
+func TestEventMessageRelayer_WhenEventTopicIsDisabled_ShouldNotSupport(t *testing.T) {
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
 	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{
@@ -75,11 +75,11 @@ func TestProduceMessage_WhenEventTopicIsDisabled_ShouldNotSupport(t *testing.T) 
 	}}
 	eventProps := &event.Properties{}
 	converter := NewDefaultEventConverter(appProps, eventProducerProps)
-	listener := NewProduceMessage(producer, eventProducerProps, eventProps, converter)
+	listener := NewEventMessageRelayer(producer, eventProducerProps, eventProps, converter)
 	assert.False(t, listener.Supports(webEvent.NewAbstractEvent(context.Background(), "TestEvent")))
 }
 
-func TestProduceMessage_WhenEventTopicNameIsEmpty_ShouldNotSupport(t *testing.T) {
+func TestEventMessageRelayer_WhenEventTopicNameIsEmpty_ShouldNotSupport(t *testing.T) {
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
 	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{
@@ -87,11 +87,11 @@ func TestProduceMessage_WhenEventTopicNameIsEmpty_ShouldNotSupport(t *testing.T)
 	}}
 	eventProps := &event.Properties{}
 	converter := NewDefaultEventConverter(appProps, eventProducerProps)
-	listener := NewProduceMessage(producer, eventProducerProps, eventProps, converter)
+	listener := NewEventMessageRelayer(producer, eventProducerProps, eventProps, converter)
 	assert.False(t, listener.Supports(webEvent.NewAbstractEvent(context.Background(), "TestEvent")))
 }
 
-func TestProduceMessage_WhenIsApplicationEvent_ShouldSendMessageWithCorrectMessageAndHeaders(t *testing.T) {
+func TestEventMessageRelayer_WhenIsApplicationEvent_ShouldSendMessageWithCorrectMessageAndHeaders(t *testing.T) {
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
 	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{
@@ -99,7 +99,7 @@ func TestProduceMessage_WhenIsApplicationEvent_ShouldSendMessageWithCorrectMessa
 	}}
 	eventProps := &event.Properties{}
 	converter := NewDefaultEventConverter(appProps, eventProducerProps)
-	listener := NewProduceMessage(producer, eventProducerProps, eventProps, converter)
+	listener := NewEventMessageRelayer(producer, eventProducerProps, eventProps, converter)
 	testEvent := event.NewApplicationEvent("TestApplicationEvent")
 	listener.Handle(testEvent)
 
@@ -124,7 +124,7 @@ func TestProduceMessage_WhenIsApplicationEvent_ShouldSendMessageWithCorrectMessa
 	assert.Nil(t, resultMetadata[kafkaConstant.LoggingContext])
 }
 
-func TestProduceMessage_WhenIsWebEvent_ShouldSendMessageWithCorrectMessageAndHeaders(t *testing.T) {
+func TestEventMessageRelayer_WhenIsWebEvent_ShouldSendMessageWithCorrectMessageAndHeaders(t *testing.T) {
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
 	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{
@@ -132,7 +132,7 @@ func TestProduceMessage_WhenIsWebEvent_ShouldSendMessageWithCorrectMessageAndHea
 	}}
 	eventProps := &event.Properties{}
 	converter := NewDefaultEventConverter(appProps, eventProducerProps)
-	listener := NewProduceMessage(producer, eventProducerProps, eventProps, converter)
+	listener := NewEventMessageRelayer(producer, eventProducerProps, eventProps, converter)
 	fakeRequestCtx := context.WithValue(context.Background(), constant.ContextReqAttribute, &webContext.RequestAttributes{
 		CorrelationId:   "test-request-id",
 		DeviceId:        "test-device-id",
@@ -182,7 +182,7 @@ func TestProduceMessage_WhenIsWebEvent_ShouldSendMessageWithCorrectMessageAndHea
 	assert.Equal(t, "test-request-id", resultLoggingContext.CorrelationId)
 }
 
-func TestProduceMessage_WhenEventIsOrderable_ShouldSendMessageWithCorrectKey(t *testing.T) {
+func TestEventMessageRelayer_WhenEventIsOrderable_ShouldSendMessageWithCorrectKey(t *testing.T) {
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
 	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{
@@ -190,7 +190,7 @@ func TestProduceMessage_WhenEventIsOrderable_ShouldSendMessageWithCorrectKey(t *
 	}}
 	eventProps := &event.Properties{}
 	converter := NewDefaultEventConverter(appProps, eventProducerProps)
-	listener := NewProduceMessage(producer, eventProducerProps, eventProps, converter)
+	listener := NewEventMessageRelayer(producer, eventProducerProps, eventProps, converter)
 	testEvent := newTestOrderableEvent(context.Background(), "TestEvent")
 	testEvent.OrderId = "3"
 	listener.Handle(testEvent)
@@ -204,7 +204,7 @@ func TestProduceMessage_WhenEventIsOrderable_ShouldSendMessageWithCorrectKey(t *
 	assert.Equal(t, "3", string(producer.message.Key))
 }
 
-func TestProduceMessage_WhenIsWebEventAndNotLogPayload_ShouldSuccess(t *testing.T) {
+func TestEventMessageRelayer_WhenIsWebEventAndNotLogPayload_ShouldSuccess(t *testing.T) {
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
 	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{
@@ -216,7 +216,7 @@ func TestProduceMessage_WhenIsWebEventAndNotLogPayload_ShouldSuccess(t *testing.
 		},
 	}
 	converter := NewDefaultEventConverter(appProps, eventProducerProps)
-	listener := NewProduceMessage(producer, eventProducerProps, eventProps, converter)
+	listener := NewEventMessageRelayer(producer, eventProducerProps, eventProps, converter)
 	testEvent := webEvent.NewAbstractEvent(context.Background(), "TestEvent")
 	listener.Handle(testEvent)
 	assert.NotNil(t, producer.message)

@@ -1,4 +1,4 @@
-package listener
+package relayer
 
 import (
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-type ProduceMessage struct {
+type EventMessageRelayer struct {
 	producer               core.SyncProducer
 	eventProducerProps     *properties.EventProducer
 	eventProps             *event.Properties
@@ -18,7 +18,7 @@ type ProduceMessage struct {
 	eventConverter         EventConverter
 }
 
-func NewProduceMessage(
+func NewEventMessageRelayer(
 	producer core.SyncProducer,
 	eventProducerProps *properties.EventProducer,
 	eventProps *event.Properties,
@@ -28,7 +28,7 @@ func NewProduceMessage(
 	for _, e := range eventProps.Log.NotLogPayloadForEvents {
 		notLogPayloadForEvents[e] = true
 	}
-	return &ProduceMessage{
+	return &EventMessageRelayer{
 		producer:               producer,
 		eventProducerProps:     eventProducerProps,
 		eventProps:             eventProps,
@@ -37,9 +37,9 @@ func NewProduceMessage(
 	}
 }
 
-func (p ProduceMessage) Supports(event pubsub.Event) bool {
+func (e EventMessageRelayer) Supports(event pubsub.Event) bool {
 	lcEvent := strings.ToLower(event.Name())
-	eventTopic, exists := p.eventProducerProps.EventMappings[lcEvent]
+	eventTopic, exists := e.eventProducerProps.EventMappings[lcEvent]
 	if !exists {
 		webLog.Debuge(event, "Produce Kafka message is skip, no mapping found for event [%s]", event.Name())
 		return false
@@ -55,18 +55,18 @@ func (p ProduceMessage) Supports(event pubsub.Event) bool {
 	return true
 }
 
-func (p ProduceMessage) Handle(event pubsub.Event) {
-	message, err := p.eventConverter.Convert(event)
+func (e EventMessageRelayer) Handle(event pubsub.Event) {
+	message, err := e.eventConverter.Convert(event)
 	if err != nil {
 		webLog.Errore(event, "Error while converting event to kafka message. Error [%s]", err)
 		return
 	}
-	partition, offset, err := p.producer.Send(message)
+	partition, offset, err := e.producer.Send(message)
 	if err != nil {
 		webLog.Errore(event, "Error while producing kafka message %s. Error [%s]",
-			log.DescMessage(message, p.eventProps.Log.NotLogPayloadForEvents), err)
+			log.DescMessage(message, e.eventProps.Log.NotLogPayloadForEvents), err)
 		return
 	}
 	webLog.Infoe(event, "Success to produce to kafka partition [%d], offset [%d], message %s",
-		partition, offset, log.DescMessage(message, p.eventProps.Log.NotLogPayloadForEvents))
+		partition, offset, log.DescMessage(message, e.eventProps.Log.NotLogPayloadForEvents))
 }

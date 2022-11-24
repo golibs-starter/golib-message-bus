@@ -1,4 +1,4 @@
-package listener
+package relayer
 
 import (
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
