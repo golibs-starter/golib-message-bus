@@ -54,10 +54,14 @@ func (d DefaultEventConverter) Convert(event pubsub.Event) (*core.Message, error
 			kafkaConstant.EventName: event.Name(),
 		},
 	}
+
+	if evtOrderable, ok := event.(EventOrderable); ok {
+		message.Key = []byte(evtOrderable.OrderingKey())
+	}
+
 	var webAbsEvent *webEvent.AbstractEvent
 	if we, ok := event.(webEvent.AbstractEventWrapper); ok {
 		webAbsEvent = we.GetAbstractEvent()
-		webAbsEvent.ServiceCode = d.appProps.Name
 		message.Headers = d.appendMsgHeaders(message.Headers, webAbsEvent)
 		message.Metadata = d.appendMsgMetadata(message.Metadata.(map[string]interface{}), webAbsEvent)
 	}
