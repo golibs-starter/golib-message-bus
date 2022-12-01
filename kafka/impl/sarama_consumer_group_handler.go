@@ -41,12 +41,9 @@ func (ConsumerGroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error {
 }
 
 func (cg ConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
-	for msg := range claim.Messages() {
+	for {
 		select {
-		case <-sess.Context().Done():
-			log.Infof("Consumer session closed, stop taking new messages")
-			return nil
-		default:
+		case msg := <-claim.Messages():
 			cg.handleFunc(cg.mapper.ToCoreConsumerMessage(msg))
 
 			// Mark this message as consumed
@@ -56,6 +53,10 @@ func (cg ConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, cl
 				// Manual commit if auto commit is disabled
 				sess.Commit()
 			}
+			break
+		case <-sess.Context().Done():
+			log.Infof("Consumer session closed, stop taking new messages")
+			return nil
 		}
 	}
 	return nil
