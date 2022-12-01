@@ -57,8 +57,11 @@ func (c *SaramaConsumer) Start(ctx context.Context) {
 
 	// Track errors
 	go func() {
-		for err := range c.consumerGroup.Errors() {
-			log.Errorf("Consumer group error for consumer [%s], detail: [%v]", c.name, err)
+		for {
+			select {
+			case err := <-c.consumerGroup.Errors():
+				log.Errorf("Consumer group error for consumer [%s], detail: [%v]", c.name, err)
+			}
 		}
 	}()
 
