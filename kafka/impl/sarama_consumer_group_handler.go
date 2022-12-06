@@ -36,7 +36,10 @@ func (cg *ConsumerGroupHandler) Setup(_ sarama.ConsumerGroupSession) error {
 	return nil
 }
 
-func (ConsumerGroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error {
+func (ConsumerGroupHandler) Cleanup(sess sarama.ConsumerGroupSession) error {
+	if sess.Context().Err() != nil {
+		log.Infof("Consumer group cleanup with err [%v]", sess.Context().Err())
+	}
 	return nil
 }
 

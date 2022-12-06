@@ -7,8 +7,8 @@ import (
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/handler"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/impl"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/listener"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
+	"gitlab.com/golibs-starter/golib-message-bus/kafka/relayer"
 	"gitlab.com/golibs-starter/golib/log"
 	"go.uber.org/fx"
 )
@@ -44,8 +44,12 @@ func KafkaProducerOpt() fx.Option {
 			fx.As(new(core.AsyncProducer)),
 			fx.ParamTags(`name:"sarama_producer_client"`),
 		)),
+		fx.Provide(fx.Annotate(
+			relayer.NewDefaultEventConverter,
+			fx.As(new(relayer.EventConverter)),
+		)),
 		golib.ProvideProps(properties.NewEventProducer),
-		golib.ProvideEventListener(listener.NewProduceMessage),
+		golib.ProvideEventListener(relayer.NewEventMessageRelayer),
 		fx.Invoke(handler.AsyncProducerErrorLogHandler),
 		fx.Invoke(handler.AsyncProducerSuccessLogHandler),
 	)
