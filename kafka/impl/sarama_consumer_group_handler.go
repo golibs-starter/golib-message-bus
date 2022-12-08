@@ -66,5 +66,4 @@ func (cg ConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, cl
 			return nil
 		}
 	}
-	return nil
 }
