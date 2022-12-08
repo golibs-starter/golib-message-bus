@@ -3,22 +3,25 @@ package impl
 import (
 	"github.com/Shopify/sarama"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
+	coreUtils "gitlab.com/golibs-starter/golib/utils"
 	"gitlab.com/golibs-starter/golib/web/log"
 )
 
 type ConsumerGroupHandler struct {
-	handleFunc func(message *core.ConsumerMessage)
-	client     sarama.Client
-	mapper     *SaramaMapper
-	unready    chan bool
+	handler     core.ConsumerHandler
+	handlerName string
+	client      sarama.Client
+	mapper      *SaramaMapper
+	unready     chan bool
 }
 
-func NewConsumerGroupHandler(client sarama.Client, handleFunc func(message *core.ConsumerMessage), mapper *SaramaMapper) *ConsumerGroupHandler {
+func NewConsumerGroupHandler(client sarama.Client, handler core.ConsumerHandler, mapper *SaramaMapper) *ConsumerGroupHandler {
 	return &ConsumerGroupHandler{
-		handleFunc: handleFunc,
-		client:     client,
-		mapper:     mapper,
-		unready:    make(chan bool),
+		handler:     handler,
+		handlerName: coreUtils.GetStructShortName(handler),
+		client:      client,
+		mapper:      mapper,
+		unready:     make(chan bool),
 	}
 }
 
@@ -31,14 +34,15 @@ func (cg *ConsumerGroupHandler) MarkUnready() {
 }
 
 func (cg *ConsumerGroupHandler) Setup(_ sarama.ConsumerGroupSession) error {
+	log.Debugf("Setup consumer group handler [%s]", cg.handlerName)
 	// Mark the consumer as ready
 	close(cg.unready)
 	return nil
 }
 
-func (ConsumerGroupHandler) Cleanup(sess sarama.ConsumerGroupSession) error {
+func (cg ConsumerGroupHandler) Cleanup(sess sarama.ConsumerGroupSession) error {
 	if sess.Context().Err() != nil {
-		log.Infof("Consumer group cleanup with err [%v]", sess.Context().Err())
+		log.Infof("Cleanup consumer group handler [%s] with err [%v]", cg.handlerName, sess.Context().Err())
 	}
 	return nil
 }
@@ -47,10 +51,10 @@ func (cg ConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, cl
 	for msg := range claim.Messages() {
 		select {
 		case <-sess.Context().Done():
-			log.Infof("Consumer session closed, stop taking new messages")
+			log.Infof("Consumer session closed, [%s] stops taking new messages", cg.handlerName)
 			return nil
 		default:
-			cg.handleFunc(cg.mapper.ToCoreConsumerMessage(msg))
+			cg.handler.HandlerFunc(cg.mapper.ToCoreConsumerMessage(msg))
 
 			// Mark this message as consumed
 			sess.MarkMessage(msg, "")

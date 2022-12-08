@@ -68,11 +68,16 @@ func KafkaConsumerOpt() fx.Option {
 }
 
 func KafkaConsumerReadyWaitOpt() fx.Option {
-	return fx.Invoke(func(consumers core.Consumer) {
-		log.Info("Wait all consumers are ready")
-		// This will block until all consumers are ready
-		<-consumers.WaitForReady()
-		log.Info("All consumers are ready")
+	return fx.Invoke(func(lc fx.Lifecycle, consumer core.Consumer) {
+		lc.Append(fx.Hook{
+			OnStart: func(ctx context.Context) error {
+				log.Info("Wait all consumers are ready")
+				// This will block until all consumers are ready
+				<-consumer.WaitForReady()
+				log.Info("All consumers are ready")
+				return nil
+			},
+		})
 	})
 }
 
