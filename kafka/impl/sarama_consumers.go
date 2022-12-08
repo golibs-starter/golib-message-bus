@@ -80,10 +80,8 @@ func (s *SaramaConsumers) Start(ctx context.Context) {
 	for _, consumer := range s.consumers {
 		go func(consumer *SaramaConsumer) {
 			defer wg.Done()
+			go consumer.Start(ctx)
 			<-consumer.WaitForReady()
-		}(consumer)
-		go func(consumer *SaramaConsumer) {
-			consumer.Start(ctx)
 		}(consumer)
 	}
 	wg.Wait()

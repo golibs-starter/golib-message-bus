@@ -19,7 +19,6 @@ type SaramaConsumer struct {
 	name                 string
 	topics               []string
 	running              bool
-	waitHandlerReady     chan bool
 }
 
 func NewSaramaConsumer(
@@ -40,7 +39,7 @@ func NewSaramaConsumer(
 			topics = append(topics, strings.TrimSpace(topic))
 		}
 	}
-	consumerGroupHandler := NewConsumerGroupHandler(client, handler.HandlerFunc, mapper)
+	consumerGroupHandler := NewConsumerGroupHandler(client, handler, mapper)
 	return &SaramaConsumer{
 		client:               client,
 		name:                 coreUtils.GetStructShortName(handler),
@@ -48,7 +47,6 @@ func NewSaramaConsumer(
 		consumerGroup:        consumerGroup,
 		consumerHandler:      handler,
 		consumerGroupHandler: consumerGroupHandler,
-		waitHandlerReady:     consumerGroupHandler.WaitForReady(),
 	}, nil
 }
 
@@ -84,7 +82,7 @@ func (c *SaramaConsumer) Start(ctx context.Context) {
 }
 
 func (c SaramaConsumer) WaitForReady() chan bool {
-	return c.waitHandlerReady
+	return c.consumerGroupHandler.WaitForReady()
 }
 
 func (c *SaramaConsumer) Stop() {
