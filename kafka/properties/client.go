@@ -13,6 +13,7 @@ type Client struct {
 	BootstrapServers []string `default:"[\"localhost:9092\"]"`
 	SecurityProtocol string   // TLS
 	ClientId         string
+	Debug            bool
 	Tls              *Tls
 	Admin            Admin
 	Producer         Producer

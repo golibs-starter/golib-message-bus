@@ -17,6 +17,13 @@ func KafkaCommonOpt() fx.Option {
 	return fx.Options(
 		golib.ProvideProps(properties.NewClient),
 		fx.Provide(impl.NewSaramaMapper),
+		fx.Provide(impl.NewDebugLogger),
+		fx.Invoke(func(props *properties.Client, debugLogger *impl.DebugLogger) {
+			if props.Debug {
+				log.Debug("Kafka debug mode is enabled")
+				sarama.DebugLogger = debugLogger
+			}
+		}),
 	)
 }
 
