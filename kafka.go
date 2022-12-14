@@ -65,10 +65,6 @@ func KafkaProducerOpt() fx.Option {
 func KafkaConsumerOpt() fx.Option {
 	return fx.Options(
 		golib.ProvideProps(properties.NewKafkaConsumer),
-		fx.Provide(fx.Annotated{
-			Name:   "sarama_consumer_client",
-			Target: impl.NewSaramaConsumerClient,
-		}),
 		fx.Provide(NewSaramaConsumers),
 		fx.Invoke(OnStartConsumerHook),
 	)
@@ -98,7 +94,6 @@ func OnStopConsumerOpt() fx.Option {
 
 type KafkaConsumersIn struct {
 	fx.In
-	Client        sarama.Client `name:"sarama_consumer_client"`
 	GlobalProps   *properties.Client
 	ConsumerProps *properties.KafkaConsumer
 	SaramaMapper  *impl.SaramaMapper
@@ -106,7 +101,7 @@ type KafkaConsumersIn struct {
 }
 
 func NewSaramaConsumers(in KafkaConsumersIn) (core.Consumer, error) {
-	return impl.NewSaramaConsumers(in.Client, in.GlobalProps, in.ConsumerProps, in.SaramaMapper, in.Handlers)
+	return impl.NewSaramaConsumers(in.GlobalProps, in.ConsumerProps, in.SaramaMapper, in.Handlers)
 }
 
 func ProvideConsumer(handler interface{}) fx.Option {
@@ -148,9 +143,8 @@ func OnStopProducerHook(in OnStopProducerIn) {
 
 type OnStopConsumerIn struct {
 	fx.In
-	Lc             fx.Lifecycle
-	ConsumerClient sarama.Client `name:"sarama_consumer_client" optional:"true"`
-	ConsumerGroup  core.Consumer `optional:"true"`
+	Lc            fx.Lifecycle
+	ConsumerGroup core.Consumer `optional:"true"`
 }
 
 func OnStartConsumerHook(lc fx.Lifecycle, consumer core.Consumer, golibCtx context.Context) {
@@ -168,11 +162,6 @@ func OnStopConsumerHook(in OnStopConsumerIn) {
 			log.Infof("Receive stop signal for kafka consumer")
 			if in.ConsumerGroup != nil {
 				in.ConsumerGroup.Stop()
-			}
-			if in.ConsumerClient != nil {
-				if err := in.ConsumerClient.Close(); err != nil {
-					log.Errorf("Cannot stop kafka consumer client. Error [%v]", err)
-				}
 			}
 			return nil
 		},

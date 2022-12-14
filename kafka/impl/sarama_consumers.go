@@ -2,7 +2,6 @@ package impl
 
 import (
 	"context"
-	"github.com/Shopify/sarama"
 	"github.com/pkg/errors"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
@@ -13,8 +12,8 @@ import (
 )
 
 type SaramaConsumers struct {
-	client             sarama.Client
-	props              *properties.Consumer
+	clientProps        *properties.Client
+	consumerProps      *properties.Consumer
 	kafkaConsumerProps *properties.KafkaConsumer
 	mapper             *SaramaMapper
 	consumers          map[string]*SaramaConsumer
@@ -22,8 +21,7 @@ type SaramaConsumers struct {
 }
 
 func NewSaramaConsumers(
-	client sarama.Client,
-	globalProps *properties.Client,
+	clientProps *properties.Client,
 	consumerProps *properties.KafkaConsumer,
 	mapper *SaramaMapper,
 	handlers []core.ConsumerHandler,
@@ -38,8 +36,8 @@ func NewSaramaConsumers(
 	}
 
 	kafkaConsumers := SaramaConsumers{
-		client:             client,
-		props:              &globalProps.Consumer,
+		clientProps:        clientProps,
+		consumerProps:      &clientProps.Consumer,
 		kafkaConsumerProps: consumerProps,
 		mapper:             mapper,
 		consumers:          make(map[string]*SaramaConsumer),
@@ -65,7 +63,7 @@ func (s *SaramaConsumers) init(handlerMap map[string]core.ConsumerHandler) error
 			log.Debugf("Kafka consumer key [%s] is not exists in handler list", key)
 			continue
 		}
-		saramaConsumer, err := NewSaramaConsumer(s.client, s.mapper, &config, handler)
+		saramaConsumer, err := NewSaramaConsumer(s.mapper, s.clientProps, &config, handler)
 		if err != nil {
 			return err
 		}

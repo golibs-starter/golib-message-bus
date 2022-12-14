@@ -2,6 +2,7 @@ package impl
 
 import (
 	"context"
+	"fmt"
 	"github.com/Shopify/sarama"
 	"github.com/pkg/errors"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
@@ -22,11 +23,17 @@ type SaramaConsumer struct {
 }
 
 func NewSaramaConsumer(
-	client sarama.Client,
 	mapper *SaramaMapper,
+	clientProps *properties.Client,
 	topicConsumer *properties.TopicConsumer,
 	handler core.ConsumerHandler,
 ) (*SaramaConsumer, error) {
+	handlerName := coreUtils.GetStructShortName(handler)
+	client, err := NewSaramaConsumerClient(clientProps)
+	if err != nil {
+		return nil, errors.WithMessage(err,
+			fmt.Sprintf("Error when create sarama consumer client for handler [%s]", handlerName))
+	}
 	consumerGroup, err := sarama.NewConsumerGroupFromClient(strings.TrimSpace(topicConsumer.GroupId), client)
 	if err != nil {
 		return nil, errors.WithMessage(err, "Error when create sarama consumer group")
@@ -42,7 +49,7 @@ func NewSaramaConsumer(
 	consumerGroupHandler := NewConsumerGroupHandler(client, handler, mapper)
 	return &SaramaConsumer{
 		client:               client,
-		name:                 coreUtils.GetStructShortName(handler),
+		name:                 handlerName,
 		topics:               topics,
 		consumerGroup:        consumerGroup,
 		consumerHandler:      handler,
@@ -89,8 +96,11 @@ func (c *SaramaConsumer) Stop() {
 	log.Infof("Consumer [%s] is stopping", c.name)
 	defer log.Infof("Consumer [%s] stopped", c.name)
 	c.running = false
+	c.consumerHandler.Close()
 	if err := c.consumerGroup.Close(); err != nil {
 		log.Errorf("Consumer [%s] could not stop. Error [%v]", c.name, err)
 	}
-	c.consumerHandler.Close()
+	if err := c.client.Close(); err != nil {
+		log.Errorf("Consumer client [%s] could not stop. Error [%v]", c.name, err)
+	}
 }
