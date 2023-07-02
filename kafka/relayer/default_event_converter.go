@@ -59,9 +59,8 @@ func (d DefaultEventConverter) Convert(event pubsub.Event) (*core.Message, error
 		message.Key = []byte(evtOrderable.OrderingKey())
 	}
 
-	var webAbsEvent *webEvent.AbstractEvent
 	if we, ok := event.(webEvent.AbstractEventWrapper); ok {
-		webAbsEvent = we.GetAbstractEvent()
+		webAbsEvent := we.GetAbstractEvent()
 		message.Headers = d.appendMsgHeaders(message.Headers, webAbsEvent)
 		message.Metadata = d.appendMsgMetadata(message.Metadata.(map[string]interface{}), webAbsEvent)
 	}
@@ -92,6 +91,8 @@ func (d DefaultEventConverter) appendMsgHeaders(headers []core.MessageHeader, ev
 }
 
 func (d DefaultEventConverter) appendMsgMetadata(metadata map[string]interface{}, event *webEvent.AbstractEvent) map[string]interface{} {
-	metadata[kafkaConstant.LoggingContext] = webLog.BuildLoggingContextFromEvent(event)
+	if eventAttributes := webEvent.GetAttributes(event.Context()); eventAttributes != nil {
+		metadata[kafkaConstant.LoggingContext] = webLog.NewContextAttributesFromEventAttrs(eventAttributes)
+	}
 	return metadata
 }

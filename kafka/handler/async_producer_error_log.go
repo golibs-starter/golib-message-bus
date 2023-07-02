@@ -13,7 +13,7 @@ func AsyncProducerErrorLogHandler(producer core.AsyncProducer, eventProps *event
 		for err := range producer.Errors() {
 			descMessage := log.DescMessage(err.Msg, eventProps.Log.NotLogPayloadForEvents)
 			if metadata, ok := err.Msg.Metadata.(map[string]interface{}); ok {
-				coreLog.Errorw(log.GetLoggingContext(metadata), msgFormat, descMessage, err.Error())
+				coreLog.WithField(log.GetLoggingContext(metadata)...).Errorf(msgFormat, descMessage, err.Error())
 			} else {
 				coreLog.Errorf(msgFormat, descMessage, err.Error())
 			}
