@@ -7,8 +7,8 @@ import (
 	"github.com/pkg/errors"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
+	"gitlab.com/golibs-starter/golib/log"
 	coreUtils "gitlab.com/golibs-starter/golib/utils"
-	"gitlab.com/golibs-starter/golib/web/log"
 	"strings"
 )
 
@@ -63,7 +63,7 @@ func (c *SaramaConsumer) Start(ctx context.Context) {
 	// Track errors
 	go func() {
 		for err := range c.consumerGroup.Errors() {
-			log.Errorf("Consumer group error for consumer [%s], detail: [%v]", c.name, err)
+			log.WithErrors(err).Errorf("Consumer group error for consumer [%s]", c.name)
 		}
 	}()
 
@@ -79,8 +79,8 @@ func (c *SaramaConsumer) Start(ctx context.Context) {
 				log.Infof("Consumer [%s] is closed when consume topics [%v]",
 					c.name, c.topics)
 			} else {
-				log.Errorf("Consume [%s] error when consume topics [%v], error [%v]",
-					c.name, c.topics, err)
+				log.WithErrors(err).Errorf("Consume [%s] error when consume topics [%v]",
+					c.name, c.topics)
 			}
 		}
 		c.consumerGroupHandler.MarkUnready()
@@ -88,7 +88,7 @@ func (c *SaramaConsumer) Start(ctx context.Context) {
 	log.Infof("Consumer [%s] with topics [%v] is closed", c.name, c.topics)
 }
 
-func (c SaramaConsumer) WaitForReady() chan bool {
+func (c *SaramaConsumer) WaitForReady() chan bool {
 	return c.consumerGroupHandler.WaitForReady()
 }
 
@@ -98,9 +98,9 @@ func (c *SaramaConsumer) Stop() {
 	c.running = false
 	c.consumerHandler.Close()
 	if err := c.consumerGroup.Close(); err != nil {
-		log.Errorf("Consumer [%s] could not stop. Error [%v]", c.name, err)
+		log.WithErrors(err).Errorf("Consumer [%s] could not stop", c.name)
 	}
 	if err := c.client.Close(); err != nil {
-		log.Errorf("Consumer client [%s] could not stop. Error [%v]", c.name, err)
+		log.WithErrors(err).Errorf("Consumer client [%s] could not stop", c.name)
 	}
 }

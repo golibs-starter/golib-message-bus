@@ -13,7 +13,8 @@ func AsyncProducerSuccessLogHandler(producer core.AsyncProducer, eventProps *eve
 		for msg := range producer.Successes() {
 			descMessage := log.DescMessage(msg, eventProps.Log.NotLogPayloadForEvents)
 			if metadata, ok := msg.Metadata.(map[string]interface{}); ok {
-				coreLog.Infow(log.GetLoggingContext(metadata), messageFormat, msg.Partition, msg.Offset, descMessage)
+				coreLog.WithField(log.GetLoggingContext(metadata)...).
+					Infof(messageFormat, msg.Partition, msg.Offset, descMessage)
 			} else {
 				coreLog.Infof(messageFormat, msg.Partition, msg.Offset, descMessage)
 			}

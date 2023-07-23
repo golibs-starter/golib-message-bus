@@ -67,7 +67,7 @@ func TestEventMessageRelayer_WhenEventTopicIsDisabled_ShouldNotSupport(t *testin
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
 	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{
-		"TestEvent": {
+		"testevent": { // We provide lowercase here because golib properties always produce lowercase when binding map
 			TopicName:     "test.topic",
 			Transactional: false,
 			Disable:       true,
@@ -83,12 +83,28 @@ func TestEventMessageRelayer_WhenEventTopicNameIsEmpty_ShouldNotSupport(t *testi
 	producer := &TestProducer{}
 	appProps := &config.AppProperties{Name: "TestApp"}
 	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{
-		"TestEvent": {TopicName: ""},
+		"testevent": { // We provide lowercase here because golib properties always produce lowercase when binding map
+			TopicName: "",
+		},
 	}}
 	eventProps := &event.Properties{}
 	converter := NewDefaultEventConverter(appProps, eventProducerProps)
 	listener := NewEventMessageRelayer(producer, eventProducerProps, eventProps, converter)
 	assert.False(t, listener.Supports(webEvent.NewAbstractEvent(context.Background(), "TestEvent")))
+}
+
+func TestEventMessageRelayer_WhenEventTopicIsEnabled_ShouldSupport(t *testing.T) {
+	producer := &TestProducer{}
+	appProps := &config.AppProperties{Name: "TestApp"}
+	eventProducerProps := &properties.EventProducer{EventMappings: map[string]properties.EventTopic{
+		"testevent": { // We provide lowercase here because golib properties always produce lowercase when binding map
+			TopicName: "test.topic",
+		},
+	}}
+	eventProps := &event.Properties{}
+	converter := NewDefaultEventConverter(appProps, eventProducerProps)
+	listener := NewEventMessageRelayer(producer, eventProducerProps, eventProps, converter)
+	assert.True(t, listener.Supports(webEvent.NewAbstractEvent(context.Background(), "TestEvent")))
 }
 
 func TestEventMessageRelayer_WhenIsApplicationEvent_ShouldSendMessageWithCorrectMessageAndHeaders(t *testing.T) {
@@ -100,7 +116,7 @@ func TestEventMessageRelayer_WhenIsApplicationEvent_ShouldSendMessageWithCorrect
 	eventProps := &event.Properties{}
 	converter := NewDefaultEventConverter(appProps, eventProducerProps)
 	listener := NewEventMessageRelayer(producer, eventProducerProps, eventProps, converter)
-	testEvent := event.NewApplicationEvent("TestApplicationEvent")
+	testEvent := event.NewApplicationEvent(context.Background(), "TestApplicationEvent")
 	listener.Handle(testEvent)
 
 	assert.NotNil(t, producer.message)
@@ -173,8 +189,8 @@ func TestEventMessageRelayer_WhenIsWebEvent_ShouldSendMessageWithCorrectMessageA
 	resultMetadata := producer.message.Metadata.(map[string]interface{})
 	assert.Equal(t, testEvent.Identifier(), resultMetadata[kafkaConstant.EventId])
 	assert.Equal(t, testEvent.Name(), resultMetadata[kafkaConstant.EventName])
-	assert.IsType(t, &webLog.LoggingContext{}, resultMetadata[kafkaConstant.LoggingContext])
-	resultLoggingContext := resultMetadata[kafkaConstant.LoggingContext].(*webLog.LoggingContext)
+	assert.IsType(t, &webLog.ContextAttributes{}, resultMetadata[kafkaConstant.LoggingContext])
+	resultLoggingContext := resultMetadata[kafkaConstant.LoggingContext].(*webLog.ContextAttributes)
 	assert.Equal(t, "test-user-id", resultLoggingContext.UserId)
 	assert.Equal(t, "test-technical-username", resultLoggingContext.TechnicalUsername)
 	assert.Equal(t, "test-device-id", resultLoggingContext.DeviceId)

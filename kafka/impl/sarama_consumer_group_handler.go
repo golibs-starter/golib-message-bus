@@ -3,8 +3,8 @@ package impl
 import (
 	"github.com/Shopify/sarama"
 	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
+	"gitlab.com/golibs-starter/golib/log"
 	coreUtils "gitlab.com/golibs-starter/golib/utils"
-	"gitlab.com/golibs-starter/golib/web/log"
 )
 
 type ConsumerGroupHandler struct {
@@ -25,7 +25,7 @@ func NewConsumerGroupHandler(client sarama.Client, handler core.ConsumerHandler,
 	}
 }
 
-func (cg ConsumerGroupHandler) WaitForReady() chan bool {
+func (cg *ConsumerGroupHandler) WaitForReady() chan bool {
 	return cg.unready
 }
 
@@ -40,14 +40,14 @@ func (cg *ConsumerGroupHandler) Setup(_ sarama.ConsumerGroupSession) error {
 	return nil
 }
 
-func (cg ConsumerGroupHandler) Cleanup(sess sarama.ConsumerGroupSession) error {
+func (cg *ConsumerGroupHandler) Cleanup(sess sarama.ConsumerGroupSession) error {
 	if sess.Context().Err() != nil {
-		log.Debugf("Cleanup consumer group handler [%s] with err [%v]", cg.handlerName, sess.Context().Err())
+		log.WithErrors(sess.Context().Err()).Debugf("Cleanup consumer group handler [%s]", cg.handlerName)
 	}
 	return nil
 }
 
-func (cg ConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+func (cg *ConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for {
 		select {
 		case msg := <-claim.Messages():
