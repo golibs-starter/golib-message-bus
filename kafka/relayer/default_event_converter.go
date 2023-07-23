@@ -1,6 +1,7 @@
 package relayer
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/pkg/errors"
 	kafkaConstant "gitlab.com/golibs-starter/golib-message-bus/kafka/constant"
@@ -65,6 +66,38 @@ func (d DefaultEventConverter) Convert(event pubsub.Event) (*core.Message, error
 		message.Metadata = d.appendMsgMetadata(message.Metadata.(map[string]interface{}), webAbsEvent)
 	}
 	return &message, nil
+}
+
+func (d DefaultEventConverter) Restore(msg *core.ConsumerMessage, dest pubsub.Event) error {
+	if err := json.Unmarshal(msg.Value, dest); err != nil {
+		return errors.WithMessage(err, "unmarshal consumer message failed")
+	}
+	if we, ok := dest.(webEvent.AbstractEventWrapper); ok {
+		abstractEvent := we.GetAbstractEvent()
+		var attributes webEvent.Attributes
+		d.restoreAttributesFromHeaders(msg.Headers, &attributes)
+		d.restoreAttributesFromDeserializedEvent(abstractEvent, &attributes)
+		abstractEvent.Ctx = context.WithValue(context.Background(), constant.ContextEventAttributes, &attributes)
+	}
+	return nil
+}
+
+func (d DefaultEventConverter) restoreAttributesFromHeaders(headers []core.MessageHeader, attributes *webEvent.Attributes) {
+	for _, header := range headers {
+		switch string(header.Key) {
+		case constant.HeaderCorrelationId:
+			attributes.CorrelationId = string(header.Value)
+		case constant.HeaderDeviceId:
+			attributes.DeviceId = string(header.Value)
+		case constant.HeaderDeviceSessionId:
+			attributes.DeviceSessionId = string(header.Value)
+		}
+	}
+}
+
+func (d DefaultEventConverter) restoreAttributesFromDeserializedEvent(evt *webEvent.AbstractEvent, attributes *webEvent.Attributes) {
+	attributes.UserId = evt.UserId
+	attributes.TechnicalUsername = evt.TechnicalUsername
 }
 
 func (d DefaultEventConverter) appendMsgHeaders(headers []core.MessageHeader, event *webEvent.AbstractEvent) []core.MessageHeader {
