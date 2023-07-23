@@ -1,6 +1,6 @@
 module gitlab.com/golibs-starter/golib-message-bus
 
-go 1.17
+go 1.19
 
 require (
 	github.com/Shopify/sarama v1.37.2
