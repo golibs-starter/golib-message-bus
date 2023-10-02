@@ -3,10 +3,10 @@ package impl
 import (
 	"crypto/tls"
 	"github.com/Shopify/sarama"
+	"github.com/golibs-starter/golib-message-bus/kafka/core"
+	"github.com/golibs-starter/golib-message-bus/kafka/properties"
+	"github.com/golibs-starter/golib-message-bus/kafka/utils"
 	"github.com/pkg/errors"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/utils"
 )
 
 type CommonProperties interface {

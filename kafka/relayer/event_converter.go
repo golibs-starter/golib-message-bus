@@ -1,8 +1,8 @@
 package relayer
 
 import (
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
-	"gitlab.com/golibs-starter/golib/pubsub"
+	"github.com/golibs-starter/golib-message-bus/kafka/core"
+	"github.com/golibs-starter/golib/pubsub"
 )
 
 type EventConverter interface {

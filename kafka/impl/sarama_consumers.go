@@ -2,11 +2,11 @@ package impl
 
 import (
 	"context"
+	"github.com/golibs-starter/golib-message-bus/kafka/core"
+	"github.com/golibs-starter/golib-message-bus/kafka/properties"
+	"github.com/golibs-starter/golib/log"
+	coreUtils "github.com/golibs-starter/golib/utils"
 	"github.com/pkg/errors"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
-	"gitlab.com/golibs-starter/golib/log"
-	coreUtils "gitlab.com/golibs-starter/golib/utils"
 	"strings"
 	"sync"
 )

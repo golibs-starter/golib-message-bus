@@ -2,8 +2,8 @@ package log
 
 import (
 	"fmt"
-	kafkaConstant "gitlab.com/golibs-starter/golib-message-bus/kafka/constant"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
+	kafkaConstant "github.com/golibs-starter/golib-message-bus/kafka/constant"
+	"github.com/golibs-starter/golib-message-bus/kafka/core"
 	"strings"
 )
 

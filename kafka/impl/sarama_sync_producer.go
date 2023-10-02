@@ -2,9 +2,9 @@ package impl
 
 import (
 	"github.com/Shopify/sarama"
+	"github.com/golibs-starter/golib-message-bus/kafka/core"
+	"github.com/golibs-starter/golib/log"
 	"github.com/pkg/errors"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
-	"gitlab.com/golibs-starter/golib/log"
 )
 
 type SaramaSyncProducer struct {

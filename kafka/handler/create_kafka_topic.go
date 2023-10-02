@@ -1,9 +1,9 @@
 package handler
 
 import (
+	"github.com/golibs-starter/golib-message-bus/kafka/core"
+	"github.com/golibs-starter/golib-message-bus/kafka/properties"
 	"github.com/pkg/errors"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
 )
 
 func CreateKafkaTopicHandler(admin core.Admin, props *properties.TopicAdmin) error {

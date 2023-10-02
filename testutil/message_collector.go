@@ -1,7 +1,7 @@
 package golibmsgTestUtil
 
 import (
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
+	"github.com/golibs-starter/golib-message-bus/kafka/core"
 	"sync"
 )
 

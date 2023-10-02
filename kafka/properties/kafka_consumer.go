@@ -1,6 +1,6 @@
 package properties
 
-import "gitlab.com/golibs-starter/golib/config"
+import "github.com/golibs-starter/golib/config"
 
 func NewKafkaConsumer(loader config.Loader) (*KafkaConsumer, error) {
 	props := KafkaConsumer{}

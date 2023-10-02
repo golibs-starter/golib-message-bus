@@ -3,13 +3,13 @@ package golibmsg
 import (
 	"context"
 	"github.com/Shopify/sarama"
-	"gitlab.com/golibs-starter/golib"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/handler"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/impl"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/relayer"
-	"gitlab.com/golibs-starter/golib/log"
+	"github.com/golibs-starter/golib"
+	"github.com/golibs-starter/golib-message-bus/kafka/core"
+	"github.com/golibs-starter/golib-message-bus/kafka/handler"
+	"github.com/golibs-starter/golib-message-bus/kafka/impl"
+	"github.com/golibs-starter/golib-message-bus/kafka/properties"
+	"github.com/golibs-starter/golib-message-bus/kafka/relayer"
+	"github.com/golibs-starter/golib/log"
 	"go.uber.org/fx"
 )
 
