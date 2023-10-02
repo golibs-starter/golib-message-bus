@@ -2,7 +2,7 @@ package golibmsgTestUtil
 
 import (
 	"fmt"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
+	"github.com/golibs-starter/golib-message-bus/kafka/core"
 	"strings"
 	"time"
 )

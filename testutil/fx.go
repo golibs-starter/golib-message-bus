@@ -1,9 +1,9 @@
 package golibmsgTestUtil
 
 import (
-	"gitlab.com/golibs-starter/golib-message-bus"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
+	"github.com/golibs-starter/golib-message-bus"
+	"github.com/golibs-starter/golib-message-bus/kafka/core"
+	"github.com/golibs-starter/golib-message-bus/kafka/properties"
 	"go.uber.org/fx"
 	"reflect"
 	"strings"

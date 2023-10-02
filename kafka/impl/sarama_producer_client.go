@@ -2,8 +2,8 @@ package impl
 
 import (
 	"github.com/Shopify/sarama"
+	"github.com/golibs-starter/golib-message-bus/kafka/properties"
 	"github.com/pkg/errors"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
 )
 
 func NewSaramaProducerClient(globalProps *properties.Client) (sarama.Client, error) {

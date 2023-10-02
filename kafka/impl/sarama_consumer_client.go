@@ -3,10 +3,10 @@ package impl
 import (
 	"fmt"
 	"github.com/Shopify/sarama"
+	"github.com/golibs-starter/golib-message-bus/kafka/constant"
+	"github.com/golibs-starter/golib-message-bus/kafka/properties"
+	"github.com/golibs-starter/golib/log"
 	"github.com/pkg/errors"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/constant"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
-	"gitlab.com/golibs-starter/golib/log"
 )
 
 func NewSaramaConsumerClient(globalProps *properties.Client) (sarama.Client, error) {

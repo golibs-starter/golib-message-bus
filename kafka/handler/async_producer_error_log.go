@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/log"
-	"gitlab.com/golibs-starter/golib/event"
-	coreLog "gitlab.com/golibs-starter/golib/log"
+	"github.com/golibs-starter/golib-message-bus/kafka/core"
+	"github.com/golibs-starter/golib-message-bus/kafka/log"
+	"github.com/golibs-starter/golib/event"
+	coreLog "github.com/golibs-starter/golib/log"
 )
 
 func AsyncProducerErrorLogHandler(producer core.AsyncProducer, eventProps *event.Properties) {

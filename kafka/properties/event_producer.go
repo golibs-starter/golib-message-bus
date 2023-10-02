@@ -1,6 +1,6 @@
 package properties
 
-import "gitlab.com/golibs-starter/golib/config"
+import "github.com/golibs-starter/golib/config"
 
 func NewEventProducer(loader config.Loader) (*EventProducer, error) {
 	props := EventProducer{}
@@ -9,7 +9,7 @@ func NewEventProducer(loader config.Loader) (*EventProducer, error) {
 }
 
 type EventProducer struct {
-    EventMappings map[string]EventTopic
+	EventMappings map[string]EventTopic
 }
 
 func (p EventProducer) Prefix() string {

@@ -3,15 +3,15 @@ package relayer
 import (
 	"context"
 	"encoding/json"
+	kafkaConstant "github.com/golibs-starter/golib-message-bus/kafka/constant"
+	"github.com/golibs-starter/golib-message-bus/kafka/core"
+	"github.com/golibs-starter/golib-message-bus/kafka/properties"
+	"github.com/golibs-starter/golib/config"
+	"github.com/golibs-starter/golib/pubsub"
+	"github.com/golibs-starter/golib/web/constant"
+	webEvent "github.com/golibs-starter/golib/web/event"
+	webLog "github.com/golibs-starter/golib/web/log"
 	"github.com/pkg/errors"
-	kafkaConstant "gitlab.com/golibs-starter/golib-message-bus/kafka/constant"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/properties"
-	"gitlab.com/golibs-starter/golib/config"
-	"gitlab.com/golibs-starter/golib/pubsub"
-	"gitlab.com/golibs-starter/golib/web/constant"
-	webEvent "gitlab.com/golibs-starter/golib/web/event"
-	webLog "gitlab.com/golibs-starter/golib/web/log"
 	"strings"
 )
 

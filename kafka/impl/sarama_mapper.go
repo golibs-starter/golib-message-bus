@@ -2,7 +2,7 @@ package impl
 
 import (
 	"github.com/Shopify/sarama"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
+	"github.com/golibs-starter/golib-message-bus/kafka/core"
 )
 
 type SaramaMapper struct {

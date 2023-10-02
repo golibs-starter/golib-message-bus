@@ -1,6 +1,6 @@
 package properties
 
-import "gitlab.com/golibs-starter/golib/config"
+import "github.com/golibs-starter/golib/config"
 
 func NewClient(loader config.Loader) (*Client, error) {
 	props := Client{}

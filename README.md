@@ -1,15 +1,18 @@
 # Golib Message Bus
 
+> **Note**
+> We are moving out from [Gitlab](https://gitlab.com/golibs-starter). All packages are now migrated to `github.com/golibs-starter/*`. Please consider updating.
+
 Message Bus solutions for Golang project. Kafka is now supported.
 
 ### Setup instruction
 
-Base setup, see [GoLib Instruction](https://gitlab.com/golibs-starter/golib/-/blob/develop/README.md)
+Base setup, see [GoLib Instruction](https://github.com/golibs-starter/golib#readme)
 
 Both `go get` and `go mod` are supported.
 
 ```shell
-go get gitlab.com/golibs-starter/golib-message-bus
+go get github.com/golibs-starter/golib-message-bus
 ```
 
 ### Usage
@@ -20,60 +23,60 @@ Using `fx.Option` to include dependencies for injection.
 package main
 
 import (
-    "gitlab.com/golibs-starter/golib-message-bus"
-    "gitlab.com/golibs-starter/golib-message-bus/kafka/core"
-    "gitlab.com/golibs-starter/golib-message-bus/testutil"
-    "go.uber.org/fx"
+	"github.com/golibs-starter/golib-message-bus"
+	"github.com/golibs-starter/golib-message-bus/kafka/core"
+	"github.com/golibs-starter/golib-message-bus/testutil"
+	"go.uber.org/fx"
 )
 
 func main() {
-    fx.New(
-        // Required
-        golibmsg.KafkaCommonOpt(),
+	fx.New(
+		// Required
+		golibmsg.KafkaCommonOpt(),
 
-        // When you want to create topics if it doesn't exist.
-        golibmsg.KafkaAdminOpt(),
+		// When you want to create topics if it doesn't exist.
+		golibmsg.KafkaAdminOpt(),
 
-        // When you want to produce message to Kafka.
-        golibmsg.KafkaProducerOpt(),
+		// When you want to produce message to Kafka.
+		golibmsg.KafkaProducerOpt(),
 
-        // When you want to consume message from Kafka.
-        golibmsg.KafkaConsumerOpt(),
+		// When you want to consume message from Kafka.
+		golibmsg.KafkaConsumerOpt(),
 
-        // When you want all consumers are ready before application started.
-        // Helpful in the integration test, see example here:
-        // https://gitlab.com/golibs-starter/golib-sample/-/blob/develop/src/worker/testing/handler/send_order_to_delivery_provider_test.go
-        golibmsg.KafkaConsumerReadyWaitOpt(),
+		// When you want all consumers are ready before application started.
+		// Helpful in the integration test, see example here:
+		// https://github.com/golibs-starter/golib-sample/blob/develop/src/worker/testing/handler/send_order_to_delivery_provider_test.go
+		golibmsg.KafkaConsumerReadyWaitOpt(),
 
-        // When you want to enable graceful shutdown.
-        // OnStop hooks will run in reverse order.
-        golibmsg.OnStopProducerOpt(),
-        golibmsg.OnStopConsumerOpt(),
+		// When you want to enable graceful shutdown.
+		// OnStop hooks will run in reverse order.
+		golibmsg.OnStopProducerOpt(),
+		golibmsg.OnStopConsumerOpt(),
 
-        // When you want to register a consumer.
-        // Consumer has to implement core.ConsumerHandler
-        golibmsg.ProvideConsumer(NewCustomConsumer),
+		// When you want to register a consumer.
+		// Consumer has to implement core.ConsumerHandler
+		golibmsg.ProvideConsumer(NewCustomConsumer),
 
 
-        // ==================== TEST UTILS =================
-        // This useful in test when you want to
-        // reset (remove) kafka consumer group every test run.
-        // Eg: https://gitlab.com/golibs-starter/golib-sample/-/tree/develop/src/worker/testing/test_suite.go
-        golibmsgTestUtil.ResetKafkaConsumerGroupOpt(),
+		// ==================== TEST UTILS =================
+		// This useful in test when you want to
+		// reset (remove) kafka consumer group every test run.
+		// Eg: https://github.com/golibs-starter/golib-sample/-/tree/develop/src/worker/testing/test_suite.go
+		golibmsgTestUtil.ResetKafkaConsumerGroupOpt(),
 
-        // This useful when you want to collect messages during test.
-        // This option needs to come with some configuration:
-        // app.kafka.consumer:
-        //      handlerMappings:
-        //         MessageCollectorHandler:
-        //             topics: # List of topics that messages will be collected.
-        //                 - c1.http.request-completed.test
-        //                 - c1.order.order-created.test
-        //             groupId: c1.MessageCollectorHandler.test
-        //             enable: true
-        // Eg: https://gitlab.com/golibs-starter/golib-sample/-/tree/develop/src/worker/testing/test_suite.go
-        golibmsgTestUtil.MessageCollectorOpt(),
-    ).Run()
+		// This useful when you want to collect messages during test.
+		// This option needs to come with some configuration:
+		// app.kafka.consumer:
+		//      handlerMappings:
+		//         MessageCollectorHandler:
+		//             topics: # List of topics that messages will be collected.
+		//                 - c1.http.request-completed.test
+		//                 - c1.order.order-created.test
+		//             groupId: c1.MessageCollectorHandler.test
+		//             enable: true
+		// Eg: https://github.com/golibs-starter/golib-sample/-/tree/develop/src/worker/testing/test_suite.go
+		golibmsgTestUtil.MessageCollectorOpt(),
+	).Run()
 }
 
 // CustomConsumer is implementation of core.ConsumerHandler
@@ -81,16 +84,17 @@ type CustomConsumer struct {
 }
 
 func NewCustomConsumer() core.ConsumerHandler {
-    return &CustomConsumer{}
+	return &CustomConsumer{}
 }
 
 func (c CustomConsumer) HandlerFunc(message *core.ConsumerMessage) {
-    // Will run when a message arrived
+	// Will run when a message arrived
 }
 
 func (c CustomConsumer) Close() {
-    // Will run when application stop
+	// Will run when application stop
 }
+
 ```
 
 ### Configuration

@@ -1,6 +1,6 @@
 package impl
 
-import "gitlab.com/golibs-starter/golib/log"
+import "github.com/golibs-starter/golib/log"
 
 type DebugLogger struct {
 }

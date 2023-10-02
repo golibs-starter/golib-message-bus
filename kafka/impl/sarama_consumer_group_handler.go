@@ -2,9 +2,9 @@ package impl
 
 import (
 	"github.com/Shopify/sarama"
-	"gitlab.com/golibs-starter/golib-message-bus/kafka/core"
-	"gitlab.com/golibs-starter/golib/log"
-	coreUtils "gitlab.com/golibs-starter/golib/utils"
+	"github.com/golibs-starter/golib-message-bus/kafka/core"
+	"github.com/golibs-starter/golib/log"
+	coreUtils "github.com/golibs-starter/golib/utils"
 )
 
 type ConsumerGroupHandler struct {
