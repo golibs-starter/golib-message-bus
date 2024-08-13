@@ -60,6 +60,10 @@ func (d DefaultEventConverter) Convert(event pubsub.Event) (*core.Message, error
 		message.Key = []byte(evtOrderable.OrderingKey())
 	}
 
+	if evtPartitionable, ok := event.(EventPartitionable); ok {
+		message.Partition = evtPartitionable.Partition()
+	}
+
 	if we, ok := event.(webEvent.AbstractEventWrapper); ok {
 		webAbsEvent := we.GetAbstractEvent()
 		message.Headers = d.appendMsgHeaders(message.Headers, webAbsEvent)
