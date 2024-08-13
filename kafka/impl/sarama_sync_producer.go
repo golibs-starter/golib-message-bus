@@ -26,12 +26,13 @@ func NewSaramaSyncProducer(client sarama.Client, mapper *SaramaMapper) (*SaramaS
 	return p, nil
 }
 
-func (s SaramaSyncProducer) Send(m *core.Message) (partition int32, offset int64, err error) {
+func (s *SaramaSyncProducer) Send(m *core.Message) (partition int32, offset int64, err error) {
 	msg := &sarama.ProducerMessage{
-		Topic:    m.Topic,
-		Value:    sarama.ByteEncoder(m.Value),
-		Headers:  s.mapper.ToSaramaHeaders(m.Headers),
-		Metadata: m.Metadata,
+		Topic:     m.Topic,
+		Value:     sarama.ByteEncoder(m.Value),
+		Headers:   s.mapper.ToSaramaHeaders(m.Headers),
+		Metadata:  m.Metadata,
+		Partition: m.Partition,
 	}
 	if m.Key != nil {
 		msg.Key = sarama.ByteEncoder(m.Key)
