@@ -17,6 +17,10 @@ type Admin interface {
 	// DeleteGroups delete multiple groups at once.
 	// Returns error if any error occurred
 	DeleteGroups(groupIds []string) error
+
+	// CountPartitions count number of partitions of a topic.
+	// Returns a map of server address and number of partitions.
+	CountPartitions(topic string) (map[string]int32, error)
 }
 
 type TopicConfiguration struct {

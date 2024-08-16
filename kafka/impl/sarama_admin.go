@@ -10,11 +10,16 @@ import (
 )
 
 type SaramaAdmin struct {
-	props *properties.Client
+	props  *properties.Client
+	config *sarama.Config
 }
 
-func NewSaramaAdmin(props *properties.Client) core.Admin {
-	return &SaramaAdmin{props: props}
+func NewSaramaAdmin(props *properties.Client) (core.Admin, error) {
+	config, err := CreateCommonSaramaConfig(props.Version, props.Admin)
+	if err != nil {
+		return nil, errors.WithMessage(err, "create sarama config error")
+	}
+	return &SaramaAdmin{props: props, config: config}, nil
 }
 
 func (s SaramaAdmin) CreateTopics(configurations []core.TopicConfiguration) error {
@@ -22,21 +27,17 @@ func (s SaramaAdmin) CreateTopics(configurations []core.TopicConfiguration) erro
 		log.Infof("Skip create Kafka topics. No topics are defined")
 		return nil
 	}
-	config, err := CreateCommonSaramaConfig(s.props.Version, s.props.Admin)
-	if err != nil {
-		return errors.WithMessage(err, "create sarama config error")
-	}
 	topicDetails := s.buildTopicDetails(configurations)
 	for _, server := range s.props.Admin.BootstrapServers {
-		if err = s.createTopics(server, config, topicDetails); err != nil {
+		if err := s.createTopics(server, topicDetails); err != nil {
 			return errors.WithMessage(err, "create topics failed")
 		}
 	}
 	return nil
 }
 
-func (s SaramaAdmin) createTopics(server string, config *sarama.Config, topicDetails map[string]*sarama.TopicDetail) error {
-	broker, err := s.connectBroker(server, config)
+func (s SaramaAdmin) createTopics(server string, topicDetails map[string]*sarama.TopicDetail) error {
+	broker, err := s.connectBroker(server, s.config)
 	if err != nil {
 		return err
 	}
@@ -60,20 +61,16 @@ func (s SaramaAdmin) DeleteTopics(topics []string) error {
 		log.Infof("No topics are defined for deletion")
 		return nil
 	}
-	config, err := CreateCommonSaramaConfig(s.props.Version, s.props.Admin)
-	if err != nil {
-		return errors.WithMessage(err, "create sarama config error")
-	}
 	for _, server := range s.props.Admin.BootstrapServers {
-		if err = s.deleteTopics(server, config, topics); err != nil {
+		if err := s.deleteTopics(server, topics); err != nil {
 			return errors.WithMessage(err, "delete topics failed")
 		}
 	}
 	return nil
 }
 
-func (s SaramaAdmin) deleteTopics(server string, config *sarama.Config, topics []string) error {
-	broker, err := s.connectBroker(server, config)
+func (s SaramaAdmin) deleteTopics(server string, topics []string) error {
+	broker, err := s.connectBroker(server, s.config)
 	if err != nil {
 		return err
 	}
@@ -94,20 +91,16 @@ func (s SaramaAdmin) DeleteGroups(groupIds []string) error {
 		log.Infof("No group ids are defined for deletion")
 		return nil
 	}
-	config, err := CreateCommonSaramaConfig(s.props.Version, s.props.Admin)
-	if err != nil {
-		return errors.WithMessage(err, "create sarama config error")
-	}
 	for _, server := range s.props.Admin.BootstrapServers {
-		if err = s.deleteGroups(server, config, groupIds); err != nil {
+		if err := s.deleteGroups(server, groupIds); err != nil {
 			return errors.WithMessage(err, "delete groups failed")
 		}
 	}
 	return nil
 }
 
-func (s SaramaAdmin) deleteGroups(server string, config *sarama.Config, groupIds []string) error {
-	broker, err := s.connectBroker(server, config)
+func (s SaramaAdmin) deleteGroups(server string, groupIds []string) error {
+	broker, err := s.connectBroker(server, s.config)
 	if err != nil {
 		return err
 	}
@@ -121,6 +114,44 @@ func (s SaramaAdmin) deleteGroups(server string, config *sarama.Config, groupIds
 	}
 	log.Infof("Kafka groups [%v] have been deleted on server [%s]", groupIds, server)
 	return nil
+}
+
+func (s SaramaAdmin) CountPartitions(topic string) (map[string]int32, error) {
+	partitions := make(map[string]int32)
+	for _, server := range s.props.Admin.BootstrapServers {
+		count, err := s.countPartition(server, topic)
+		if err != nil {
+			return nil, errors.WithMessagef(err, "count partition failed on server [%s]", server)
+		}
+		partitions[server] = count
+	}
+	return partitions, nil
+}
+
+func (s SaramaAdmin) countPartition(server string, topic string) (int32, error) {
+	broker, err := s.connectBroker(server, s.config)
+	if err != nil {
+		return 0, err
+	}
+	defer func() {
+		if err := broker.Close(); err != nil {
+			log.Errorf("Cannot close kafka admin connection on server [%s], err [%s]", server, err)
+		}
+	}()
+
+	request := &sarama.MetadataRequest{Topics: []string{topic}}
+	response, err := broker.GetMetadata(request)
+	if err != nil {
+		return 0, errors.WithMessage(err, "failed to get metadata")
+	}
+
+	for _, topicMetadata := range response.Topics {
+		if topicMetadata.Name == topic {
+			return int32(len(topicMetadata.Partitions)), nil
+		}
+	}
+
+	return 0, fmt.Errorf("topic %s not found", topic)
 }
 
 func (s SaramaAdmin) connectBroker(server string, config *sarama.Config) (*sarama.Broker, error) {
